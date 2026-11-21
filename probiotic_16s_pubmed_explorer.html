@@ -361,6 +361,14 @@
       margin: 0 0 10px 0;
     }
 
+    .section-sub-bullet {
+      margin: -4px 0 10px 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.48;
+    }
+
     .count-pill {
       background-color: var(--accent-navy);
       color: #ffffff;
@@ -577,13 +585,10 @@
         <div class="evidence-grid">
           <!-- Left Column: Sections 1 & 2 -->
           <div class="evidence-col-left">
-            <!-- Section 1: DNA Barcode (16S rRNA Gene) -->
+            <!-- Section 1: 16S rRNA Gene -->
             <section class="study-section" aria-labelledby="sec-16s-heading">
               <div class="section-header">
-                <h3 class="section-title" id="sec-16s-heading">
-                  1. DNA Barcode (16S rRNA Gene)
-                  <span class="section-subtitle">— Species identification marker</span>
-                </h3>
+                <h3 class="section-title" id="sec-16s-heading">1. 16S rRNA Gene</h3>
                 <span class="count-pill" id="pill-16s">Loading…</span>
               </div>
               <p class="section-context">
@@ -592,17 +597,14 @@
               <div id="content-16s" aria-live="polite"></div>
             </section>
 
-            <!-- Section 2: Whole Genome Reference Check -->
+            <!-- Section 2: Whole Genome -->
             <section class="study-section" aria-labelledby="sec-genome-heading">
               <div class="section-header">
-                <h3 class="section-title" id="sec-genome-heading">
-                  2. Whole Genome Reference Check
-                  <span class="section-subtitle">— Complete organism DNA</span>
-                </h3>
+                <h3 class="section-title" id="sec-genome-heading">2. Whole Genome</h3>
                 <span class="count-pill" id="pill-genome">Loading…</span>
               </div>
               <p class="section-context">
-                <strong>Why check for a whole genome?</strong> While 16S rRNA reads just one ~1,500-bp gene, whole-genome sequencing reads all millions of base pairs—helping scientists verify specific strains, beneficial traits, and safety genes.
+                <strong>Why check for a whole genome?</strong> While 16S rRNA reads just one ~1,500-bp gene, whole-genome sequencing reads all millions of base pairs (helping scientists verify specific strains, beneficial traits, and safety genes).
               </p>
               <div id="content-genome" aria-live="polite"></div>
             </section>
@@ -610,15 +612,15 @@
 
           <!-- Right Column: Section 3 -->
           <div class="evidence-col-right">
-            <!-- Section 3: Published Scientific Studies (PubMed) -->
+            <!-- Section 3: Published Scientific Studies -->
             <section class="study-section" aria-labelledby="sec-pubmed-heading">
               <div class="section-header">
-                <h3 class="section-title" id="sec-pubmed-heading">
-                  3. Published Scientific Studies (PubMed)
-                  <span class="section-subtitle">— Peer-reviewed research</span>
-                </h3>
+                <h3 class="section-title" id="sec-pubmed-heading">3. Published Scientific Studies</h3>
                 <span class="count-pill" id="pill-pubmed">Loading…</span>
               </div>
+              <p class="section-context">
+                <strong>Why check peer-reviewed studies?</strong> Having a DNA sequence only confirms an organism's identity. Published experiments and clinical trials test whether a strain survives digestion, provides measurable health benefits, or has even been studied in humans.
+              </p>
               <div id="content-pubmed" aria-live="polite"></div>
             </section>
           </div>
@@ -1769,7 +1771,7 @@
         const cleanStr = cleanStrain(org.strain);
         const strainQuery = buildStrainQuery(cleanStr);
         const titleAbsQuery = buildOrganismQuery(org.species, "[Title/Abstract]");
-        const cacheKey = org.species + "|" + cleanStr + "|PUBMED_TIERED_2";
+        const cacheKey = org.species + "|" + cleanStr + "|PUBMED_4TIER_V1";
 
         try {
           let data = pubmedCache[cacheKey];
@@ -1778,6 +1780,7 @@
             let scopeBadge = "";
             let usedTerm = "";
 
+            // Tier 1: Exact Strain + Probiotic
             if (strainQuery) {
               const tier1Term = titleAbsQuery + " AND " + strainQuery + " AND probiotic";
               const t1 = await queryPubMedTop2(tier1Term);
@@ -1788,6 +1791,7 @@
               }
             }
 
+            // Tier 2: Any Exact Strain Study (if no probiotic-tagged study matched the strain)
             if (!res && strainQuery) {
               const tier2Term = titleAbsQuery + " AND " + strainQuery;
               const t2 = await queryPubMedTop2(tier2Term);
@@ -1798,18 +1802,20 @@
               }
             }
 
+            // Tier 3: Species + Probiotic
             if (!res) {
               const tier3Term = titleAbsQuery + " AND probiotic";
-              res = await queryPubMedTop2(tier3Term);
-              scopeBadge = "Species + Probiotic";
-              usedTerm = tier3Term;
-            }
-
-            if (res.totalCount === 0) {
-              const tier4Term = titleAbsQuery;
-              res = await queryPubMedTop2(tier4Term);
-              scopeBadge = "Species Literature";
-              usedTerm = tier4Term;
+              const t3 = await queryPubMedTop2(tier3Term);
+              if (t3.totalCount > 0) {
+                res = t3;
+                scopeBadge = "Species + Probiotic";
+                usedTerm = tier3Term;
+              } else {
+                // Tier 4: General Species Literature
+                res = await queryPubMedTop2(titleAbsQuery);
+                scopeBadge = "Species Literature";
+                usedTerm = titleAbsQuery;
+              }
             }
 
             data = {
@@ -1825,6 +1831,26 @@
 
           pillEl.textContent = data.totalCount.toLocaleString() + (data.totalCount === 1 ? " study" : " studies");
           const pubmedSearchUrl = "https://pubmed.ncbi.nlm.nih.gov/?term=" + encodeURIComponent(data.usedTerm);
+
+          // Dynamic scope callout covering all combinations of the 4 search tiers
+          let scopeCalloutHtml = "";
+          if (data.totalCount > 0) {
+            let scopeText = "";
+            if (data.scopeBadge === "Strain + Probiotic") {
+              scopeText = "Showing probiotic studies specifically testing strain <strong>" + escapeHtml(org.strain) + "</strong>.";
+            } else if (data.scopeBadge === "Strain Study") {
+              scopeText = "No probiotic-specific trials matched strain <strong>" + escapeHtml(org.strain) + "</strong>, so general published studies on this exact strain are shown below.";
+            } else if (data.scopeBadge === "Species + Probiotic") {
+              scopeText = cleanStr
+                ? ("No published studies on PubMed matched strain <strong>" + escapeHtml(org.strain) + "</strong>, so top probiotic studies for the species <em>" + escapeHtml(org.species) + "</em> are shown below.")
+                : ("No strain ID is listed on the bottle, so top probiotic studies for the species <em>" + escapeHtml(org.species) + "</em> are shown below.");
+            } else {
+              scopeText = cleanStr
+                ? ("No probiotic studies matched strain <strong>" + escapeHtml(org.strain) + "</strong> or <em>" + escapeHtml(org.species) + "</em>, so general scientific studies on this species are shown below.")
+                : ("No strain ID is listed on the bottle and no probiotic-specific studies were found, so general scientific studies on <em>" + escapeHtml(org.species) + "</em> are shown below.");
+            }
+            scopeCalloutHtml = '<ul class="section-sub-bullet"><li>' + scopeText + "</li></ul>";
+          }
 
           const articlesHtml = data.articles.length === 0
             ? '<p class="status-text">No exact PubMed matches found. Use the link below to search directly on NIH PubMed.</p>'
@@ -1849,6 +1875,7 @@
               }).join("");
 
           contentEl.innerHTML =
+            scopeCalloutHtml +
             articlesHtml +
             '<div class="section-footer">' +
               '<a class="ext-link" href="' + pubmedSearchUrl + '" target="_blank" rel="noopener">View all ' + data.totalCount.toLocaleString() + " studies on NIH PubMed &#8599;</a>" +
