@@ -418,137 +418,7 @@ let currentCode = "JARR";
 let selectedIdx = 0;
 const recordCache = {};
 const seqCache = {};
-const pubmedCache = {};
 
-async function fetchPubMed(org) {
-
-  const queryTerm = org.strain
-    ? `"${org.species}" AND "${org.strain}"`
-    : `"${org.species}" AND probiotic`;
-
-  const cacheKey = org.species + "|" + org.strain;
-
-  if (pubmedCache[cacheKey]) {
-    return pubmedCache[cacheKey];
-  }
-
-  try {
-
-    const searchUrl =
-      "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" +
-      encodeURIComponent(queryTerm) +
-      "&retmode=json&retmax=3&sort=relevance";
-
-    const searchResp = await fetch(searchUrl);
-
-    if (!searchResp.ok) {
-      throw new Error("PubMed search failed");
-    }
-
-    const searchJson = await searchResp.json();
-
-    const count =
-      parseInt(searchJson.esearchresult.count, 10) || 0;
-
-    const pmids =
-      searchJson.esearchresult.idlist || [];
-
-    if (pmids.length === 0) {
-
-      const emptyResult = {
-        count,
-        html: `
-          <div class="note-box">
-            No PubMed studies were found for this search.
-          </div>
-        `
-      };
-
-      pubmedCache[cacheKey] = emptyResult;
-      return emptyResult;
-    }
-
-    const summaryUrl =
-      "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=" +
-      pmids.join(",") +
-      "&retmode=json";
-
-    const summaryResp = await fetch(summaryUrl);
-
-    if (!summaryResp.ok) {
-      throw new Error("PubMed summary failed");
-    }
-
-    const summaryJson = await summaryResp.json();
-
-    const articlesHtml = pmids.map(id => {
-
-      const art = summaryJson.result[id];
-
-      if (!art) return "";
-
-      const firstAuthor =
-        art.authors && art.authors.length
-          ? art.authors[0].name + " et al."
-          : "Author unavailable";
-
-      const year =
-        art.pubdate
-          ? art.pubdate.slice(0,4)
-          : "";
-
-      return `
-        <div class="rec-card">
-          <div class="rec-title">
-            <a class="ext-link"
-               href="https://pubmed.ncbi.nlm.nih.gov/${id}/"
-               target="_blank"
-               rel="noopener">
-              ${art.title}
-            </a>
-          </div>
-
-          <div class="rec-meta">
-            ${firstAuthor}
-            ·
-            ${art.source}
-            (${year})
-            · PMID: ${id}
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    const result = {
-      count,
-      html: `
-        ${articlesHtml}
-
-        <a class="ext-link"
-           href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(queryTerm)}"
-           target="_blank"
-           rel="noopener">
-           View all ${count} PubMed studies ↗
-        </a>
-      `
-    };
-
-    pubmedCache[cacheKey] = result;
-
-    return result;
-
-  } catch (err) {
-
-    return {
-      count: 0,
-      html: `
-        <div class="note-box">
-          Unable to load PubMed results.
-        </div>
-      `
-    };
-  }
-}
 function cleanStrain(str) {
   return (str || "").replace(/[®™]/g, "").trim();
 }
@@ -660,66 +530,21 @@ async function load16SRecords(idx) {
 
   const org = catalog[currentCode].organisms[idx];
   const panel = document.getElementById("detail-panel");
-  const pubmedData = await fetchPubMed(org);
   const blastUrl = "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&DATABASE=16S_ribosomal_RNA";
   const isFungal = /^Saccharomyces/i.test(org.species);
 
   if (isFungal) {
-panel.innerHTML = `
-  <div class="detail-header">
-    <h3>${org.label}</h3>
-    <span class="count-pill">
-      ${data.count}
-      16S
-      ${data.count === 1 ? "Record" : "Records"}
-    </span>
-  </div>
-
-  <div class="meta-line">
-    <strong>Species:</strong>
-    <em>${org.species}</em>
-
-    ·
-
-    <strong>Strain:</strong>
-    ${org.strain || "Not listed"}
-
-    ·
-
-    <strong>Match:</strong>
-    ${data.scope}
-  </div>
-
-  <h4 style="color:#137356;margin-bottom:8px;">
-    Research Evidence
-  </h4>
-
-  ${pubmedData.html}
-
-  <hr style="margin:16px 0;border:none;border-top:1px solid #ddd;">
-
-  <h4 style="color:#137356;margin-bottom:8px;">
-    DNA Identification
-  </h4>
-
-  ${cardsHtml}
-
-  <div class="action-row" style="margin-top:8px;">
-    <a class="ext-link"
-       href="${nucSearchUrl}"
-       target="_blank"
-       rel="noopener">
-       View Additional DNA Records ↗
-    </a>
-
-    <a class="ext-link"
-       href="${blastUrl}"
-       target="_blank"
-       rel="noopener">
-       Open NCBI BLAST ↗
-    </a>
-  </div>
-`;
+    panel.innerHTML = `
+      <div class="detail-header">
+        <h3>${org.label}</h3>
+        <span class="count-pill">Fungal / Non-16S</span>
+      </div>
+      <div class="note-box">
+        <strong>Note on 16S rRNA:</strong> <em>${org.species}</em> is a yeast (fungi do not encode prokaryotic 16S rRNA; fungal identification typically uses ITS or 28S rRNA).
+      </div>
+      <a class="ext-link" href="${blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST ↗</a>
+    `;
+    return;
   }
 
   const cleanStr = cleanStrain(org.strain);
