@@ -1487,6 +1487,18 @@
             ? '<div class="note-box"><strong>Yeast / Non-Bacterial Taxon:</strong> <em>' + escapeHtml(org.species) + "</em> is a fungus (yeast), so it does not have a bacterial 16S rRNA gene. Instead, scientists use the fungal <strong>ITS / 28S rRNA</strong> region shown below.</div>"
             : "";
 
+          // Dynamic sub-bullet clarifying that 16S rRNA serves as a species-level reference sequence
+          let scopeCallout16S = "";
+          if (data.records.length > 0 && !isFungal) {
+            let scopeText16S = "";
+            if (data.exactStrainFound) {
+              scopeText16S = "Because 16S rRNA identifies bacteria at the species level, a public GenBank reference sequence is shown below (deposited for strain <strong>" + escapeHtml(org.strain) + "</strong>, not raw DNA from your capsule).";
+            } else {
+              scopeText16S = "Because 16S rRNA identifies bacteria at the species level rather than distinguishing individual strains, a public GenBank reference sequence for <em>" + escapeHtml(org.species) + "</em> is shown below (not raw DNA from your capsule).";
+            }
+            scopeCallout16S = '<ul class="section-sub-bullet"><li>' + scopeText16S + "</li></ul>";
+          }
+
           const cardsHtml = data.records.length === 0
             ? '<p class="status-text">No full-length 16S rRNA records matched this filter.</p>'
             : data.records.map((rec, rIdx) => {
@@ -1508,6 +1520,7 @@
               }).join("");
 
           contentEl.innerHTML =
+            scopeCallout16S +
             fungalNote +
             cardsHtml +
             '<div class="section-footer">' +
@@ -1618,20 +1631,20 @@
             : "~1.8–3.5 million bp total DNA, vs. ~1,500 bp for 16S alone";
 
           if (data.count > 0) {
-            const scopeExplanation = data.isStrainSpecific
-              ? ("<strong>Exact Strain Genome Found:</strong> The full genome for strain <strong>" + escapeHtml(org.strain) + "</strong> is sequenced (" + sizeNote + "), including its 16S rRNA gene copies.")
+            const scopeTextGenome = data.isStrainSpecific
+              ? ("The complete genome for your exact strain <strong>" + escapeHtml(org.strain) + "</strong> has been sequenced and uploaded to NCBI (" + sizeNote + ").")
               : cleanStr
-                ? ("<strong>Species-Level Genomes Available:</strong> No public genome matched strain <strong>" + escapeHtml(org.strain) + "</strong>, but <strong>" + data.count.toLocaleString() + " whole " + genomeWord + "</strong> exist for other strains of <em>" + escapeHtml(org.species) + "</em> (" + sizeNote + ").")
-                : ("<strong>Species-Level Genomes Available:</strong> No strain ID is listed on the bottle, but <strong>" + data.count.toLocaleString() + " whole " + genomeWord + "</strong> exist for <em>" + escapeHtml(org.species) + "</em> (" + sizeNote + ").");
+                ? ("No public genome matched strain <strong>" + escapeHtml(org.strain) + "</strong>, but researchers worldwide have sequenced and uploaded <strong>" + data.count.toLocaleString() + " whole " + genomeWord + "</strong> for other strains of <em>" + escapeHtml(org.species) + "</em> (" + sizeNote + ").")
+                : ("No strain ID is listed on the bottle, but researchers worldwide have sequenced and uploaded <strong>" + data.count.toLocaleString() + " whole " + genomeWord + "</strong> for <em>" + escapeHtml(org.species) + "</em> (" + sizeNote + ").");
 
             const exMeta = data.example
-              ? ('<div class="rec-meta"><strong>Example Assembly ID:</strong> ' + escapeHtml(data.example.accession) + " &middot; <strong>Assembly Level:</strong> " + escapeHtml(data.example.level) + "</div>")
+              ? ('<div class="rec-meta"><strong>Reference Genome ID:</strong> ' + escapeHtml(data.example.accession) + " &middot; <strong>Assembly Level:</strong> " + escapeHtml(data.example.level) + "</div>")
               : "";
 
             contentEl.innerHTML =
+              '<ul class="section-sub-bullet"><li>' + scopeTextGenome + "</li></ul>" +
               '<article class="rec-card">' +
                 '<div class="rec-title" style="margin-bottom:4px;">Whole Genome Sequenced &amp; Available on NCBI</div>' +
-                '<div class="rec-meta" style="color:var(--text-primary); line-height:1.48;">' + scopeExplanation + "</div>" +
                 exMeta +
                 '<div class="action-row">' +
                   '<a class="ext-link" href="' + assemblySearchUrl + '" target="_blank" rel="noopener">Browse all ' + data.count.toLocaleString() + " " + genomeWord + " on NCBI &#8599;</a>" +
@@ -1640,8 +1653,8 @@
               "</article>";
           } else {
             contentEl.innerHTML =
+              '<ul class="section-sub-bullet"><li>No public whole-genome assemblies were found under this taxon name—many bacteria only have their 16S barcode gene sequenced so far.</li></ul>' +
               '<article class="rec-card">' +
-                '<div class="rec-meta" style="color:var(--text-primary); line-height:1.48;">No whole-genome assemblies were found under this taxon name—many bacteria only have their 16S barcode gene sequenced so far.</div>' +
                 '<div class="action-row">' +
                   '<a class="ext-link" href="' + datasetsUrl + '" target="_blank" rel="noopener">Search NCBI Genome Datasets &#8599;</a>' +
                 "</div>" +
