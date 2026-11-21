@@ -5,23 +5,20 @@
 <title>Assigned Probiotic & Live NIH PubMed Literature Explorer</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; margin: 12px; color: #222; background: #fafafa; }
-  .top-bar { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; align-items: center; }
-  @media (max-width: 760px) { .top-bar { grid-template-columns: 1fr; } }
-  .field { display: flex; flex-direction: column; font-size: 13px; }
-  .field label { font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between; }
-  select { padding: 6px 8px; border: 1px solid #bbb; border-radius: 4px; font-size: 13px; background: #fff; color: #222; }
+  .top-bar { background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; font-size: 13px; max-width: 520px; }
+  .field label { font-weight: 600; margin-bottom: 4px; }
+  select { padding: 7px 9px; border: 1px solid #bbb; border-radius: 4px; font-size: 13px; background: #fff; color: #222; }
   .brand-banner { background: #eef6f3; border: 1px solid #cce3da; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
-  .layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; align-items: start; }
+  .layout { display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px; align-items: start; }
   @media (max-width: 740px) { .layout { grid-template-columns: 1fr; } }
   .panel { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 12px; }
   .panel-header { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: #222; display: flex; justify-content: space-between; }
-  .bar-row { display: flex; align-items: center; padding: 5px 6px; border-radius: 4px; cursor: pointer; font-size: 12px; border: 1px solid transparent; margin-bottom: 2px; }
-  .bar-row:hover, .bar-row:focus { background: #eef6f3; border-color: #137356; outline: none; }
-  .bar-row.active { background: #e3f2ed; border-color: #137356; font-weight: 600; }
-  .strain-name { width: 175px; flex-shrink: 0; }
-  .bar-track { flex-grow: 1; background: #eee; height: 14px; border-radius: 3px; overflow: hidden; margin: 0 8px; }
-  .bar-fill { height: 100%; background: #137356; transition: width 0.15s ease; }
-  .bar-val { width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+  .org-list { list-style: none; padding: 0; margin: 0; }
+  .org-btn { width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; border: 1px solid #e2e2e2; background: #fff; color: #222; margin-bottom: 5px; }
+  .org-btn:hover, .org-btn:focus { background: #eef6f3; border-color: #137356; outline: 2px solid #137356; outline-offset: 1px; }
+  .org-btn.active { background: #e3f2ed; border-color: #137356; font-weight: 600; }
+  .strain-tag { font-size: 11px; background: #eef2f6; color: #1b4f72; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
   .pubmed-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 8px; gap: 8px; }
   .pubmed-header h3 { margin: 0; font-size: 15px; color: #137356; }
   .count-pill { background: #1b4f72; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
@@ -39,30 +36,22 @@
 <body>
 
 <main>
-  <div class="top-bar" role="group" aria-label="Assigned Probiotic and Sequencing Controls">
+  <div class="top-bar" role="group" aria-label="Assigned Probiotic Selection">
     <div class="field">
-      <label for="product-select">Assigned Probiotic Sample:</label>
+      <label for="product-select">Select Your Assigned Probiotic Sample:</label>
       <select id="product-select"></select>
-    </div>
-    <div class="field">
-      <label for="reads">Sequencing Depth: <span id="reads-val">10,000</span> reads</label>
-      <input type="range" id="reads" min="100" max="20000" step="100" value="10000">
-    </div>
-    <div class="field">
-      <label for="contam">Cross-Contamination: <span id="contam-val">0%</span></label>
-      <input type="range" id="contam" min="0" max="50" step="5" value="0">
     </div>
   </div>
 
   <div class="brand-banner" id="brand-banner" aria-live="polite"></div>
 
   <div class="layout">
-    <div class="panel" role="region" aria-label="Label Organisms and Simulated Relative Abundance">
+    <div class="panel" role="region" aria-label="Label Organisms">
       <div class="panel-header">
-        <span>Label Organisms (Click to query PubMed)</span>
-        <span id="detected-summary" style="color:#137356;"></span>
+        <span>Label Organisms (Click to search PubMed)</span>
+        <span id="org-count" style="color:#137356;"></span>
       </div>
-      <div id="bars"></div>
+      <ul class="org-list" id="org-list"></ul>
     </div>
 
     <div class="panel" id="pubmed-panel" aria-live="polite" aria-atomic="true"></div>
@@ -266,11 +255,6 @@ let currentCode = "JARR";
 let selectedIdx = 0;
 const cache = {};
 
-function seededNoise(seed) {
-  const x = Math.sin(seed * 9999) * 10000;
-  return x - Math.floor(x);
-}
-
 function initSelect() {
   const sel = document.getElementById('product-select');
   Object.keys(catalog).forEach(code => {
@@ -288,26 +272,17 @@ function initSelect() {
   });
 }
 
-function getBaseShares(organisms) {
-  const n = organisms.length;
-  // Slightly tapered realistic share weights that sum to 100%
-  const raw = organisms.map((_, idx) => Math.max(4, (n - idx * 0.55)));
-  const sum = raw.reduce((a, b) => a + b, 0);
-  return raw.map(v => (v / sum) * 100);
-}
-
 async function queryPubMed(idx) {
   selectedIdx = idx;
-  renderBars();
+  renderList();
 
-  const orgs = catalog[currentCode].organisms;
-  const org = orgs[idx];
+  const org = catalog[currentCode].organisms[idx];
   const panel = document.getElementById('pubmed-panel');
 
   const queryTerm = org.strain
     ? `"${org.species}" AND "${org.strain}"`
     : `"${org.species}" AND probiotic`;
-  const cacheKey = `${currentCode}|${org.species}|${org.strain}`;
+  const cacheKey = `${org.species}|${org.strain}`;
   const pubmedSearchUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(queryTerm)}`;
 
   if (cache[cacheKey]) {
@@ -333,7 +308,7 @@ async function queryPubMed(idx) {
 
     let papersHtml = '';
     if (pmids.length === 0) {
-      papersHtml = `<p style="font-size:12px; color:#555;">No exact PubMed matches found for this query. Click below to broaden the search on PubMed.</p>`;
+      papersHtml = `<p style="font-size:12px; color:#555;">No exact PubMed matches found for this query. Use the link below to broaden the search on PubMed.</p>`;
     } else {
       const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(',')}&retmode=json`;
       const summaryResp = await fetch(summaryUrl);
@@ -358,7 +333,7 @@ async function queryPubMed(idx) {
         <h3>${org.label}</h3>
         <span class="count-pill">${totalCount} PubMed ${totalCount === 1 ? 'Study' : 'Studies'}</span>
       </div>
-      <div class="meta-line"><strong>Species:</strong> <em>${org.species}</em> | <strong>Strain:</strong> ${org.strain || 'Not specified on label'}</div>
+      <div class="meta-line"><strong>Species:</strong> <em>${org.species}</em> | <strong>Strain:</strong> ${org.strain || 'Not listed on label'}</div>
       ${papersHtml}
       <a class="pubmed-link" href="${pubmedSearchUrl}" target="_blank" rel="noopener">View all ${totalCount} results on NIH PubMed ↗</a>
     `;
@@ -373,55 +348,20 @@ async function queryPubMed(idx) {
   }
 }
 
-function renderBars() {
-  const item = catalog[currentCode];
-  const orgs = item.organisms;
-  const shares = getBaseShares(orgs);
+function renderList() {
+  const orgs = catalog[currentCode].organisms;
+  document.getElementById('org-count').textContent = `${orgs.length} label ${orgs.length === 1 ? 'organism' : 'organisms'}`;
 
-  const reads = parseInt(document.getElementById('reads').value, 10);
-  const contam = parseInt(document.getElementById('contam').value, 10);
-  document.getElementById('reads-val').textContent = reads.toLocaleString();
-  document.getElementById('contam-val').textContent = contam + "%";
-
-  const productFrac = (100 - contam) / 100;
-  let detected = 0;
-
-  const counts = orgs.map((org, idx) => {
-    const exp = (shares[idx] / 100) * productFrac * reads;
-    if (exp < 1.2 && seededNoise(reads + idx + currentCode.charCodeAt(0)) > exp) return 0;
-    const val = Math.round(exp);
-    if (val > 0) detected++;
-    return val;
-  });
-
-  const contamReads = Math.round((contam / 100) * reads);
-  const total = counts.reduce((a, b) => a + b, 0) + contamReads;
-
-  document.getElementById('detected-summary').textContent = `${detected} / ${orgs.length} label taxa detected`;
-
-  let html = orgs.map((org, i) => {
-    const pct = total > 0 ? (counts[i] / total) * 100 : 0;
+  document.getElementById('org-list').innerHTML = orgs.map((org, i) => {
     const isSelected = i === selectedIdx;
     return `
-      <div class="bar-row ${isSelected ? 'active' : ''}" tabindex="0" role="button" aria-pressed="${isSelected}"
-           onclick="queryPubMed(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();queryPubMed(${i});}">
-        <span class="strain-name">${org.label}</span>
-        <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${Math.min(100, pct * 3.5)}%;"></div></div>
-        <span class="bar-val">${pct.toFixed(1)}%</span>
-      </div>`;
+      <li>
+        <button type="button" class="org-btn ${isSelected ? 'active' : ''}" aria-pressed="${isSelected}" onclick="queryPubMed(${i})">
+          <span>${org.label}</span>
+          <span class="strain-tag">${org.strain || 'Species only'}</span>
+        </button>
+      </li>`;
   }).join('');
-
-  if (contam > 0) {
-    const uPct = (contamReads / total) * 100;
-    html += `
-      <div class="bar-row" style="cursor:default;">
-        <span class="strain-name" style="color:#b54700; font-weight:600;">External Contaminant</span>
-        <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${Math.min(100, uPct * 3.5)}%; background:#b54700;"></div></div>
-        <span class="bar-val" style="color:#b54700; font-weight:600;">${uPct.toFixed(1)}%</span>
-      </div>`;
-  }
-
-  document.getElementById('bars').innerHTML = html;
 }
 
 function renderAll() {
@@ -430,10 +370,9 @@ function renderAll() {
     <div><strong>Code:</strong> ${currentCode} · <strong>Product:</strong> ${item.brand}</div>
     <div><strong>Manufacturer:</strong> ${item.manufacturer} · <strong>Label Potency:</strong> ${item.cfu}</div>
   `;
-  renderBars();
+  renderList();
 }
 
-['reads', 'contam'].forEach(id => document.getElementById(id).addEventListener('input', renderBars));
 initSelect();
 renderAll();
 queryPubMed(0);
