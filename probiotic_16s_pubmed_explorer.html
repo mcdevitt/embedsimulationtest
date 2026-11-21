@@ -3,208 +3,627 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Probiotic Strain, 16S rRNA &amp; PubMed Explorer</title>
-  <!-- Load Tailwind CSS for responsive, modern scientific UI styling -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Load Inter and JetBrains Mono fonts for clean typography and FASTA alignment -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-          }
-        }
-      }
-    };
-  </script>
+  <title>BIOS 110 Probiotic DNA &amp; Research Explorer</title>
   <style>
-    /* Custom subtle scrollbars for organism list and FASTA viewer */
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    /* ==========================================================================
+       1. DESIGN TOKENS & WCAG 2.1 AA HIGH-CONTRAST PALETTE
+       ========================================================================== */
+    :root {
+      --bg-page: #fafafa;
+      --bg-card: #ffffff;
+      --bg-subtle: #f4f6f8;
+      --bg-banner: #eef6f3;
+      --border-banner: #bfe0d4;
+      --bg-active: #e3f2ed;
+      --border-default: #d0d7de;
+      --border-strong: #8c959f;
+
+      /* High-contrast accessible colors (>= 4.5:1 against backgrounds) */
+      --text-primary: #1f2328;
+      --text-secondary: #424a53;
+      --accent-green: #0f6248;       /* 7.1:1 contrast on white */
+      --accent-green-hover: #0a4935;
+      --accent-navy: #16486c;        /* 8.8:1 contrast on white */
+      --accent-navy-bg: #eef4f8;
+      --focus-ring: #0b57d0;
+
+      --warn-bg: #fff8e6;
+      --warn-border: #e5c370;
+      --warn-text: #594000;
+
+      --radius-md: 8px;
+      --radius-sm: 6px;
     }
-    .custom-scroll::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 6px;
+
+    *, *::before, *::after {
+      box-sizing: border-box;
     }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 6px;
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: clamp(10px, 2vw, 18px);
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.48;
+      font-size: 14px;
     }
-    .custom-scroll::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+
+    /* Accessible Skip Link for Keyboard & Screen Reader Users */
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 8px;
+      background: var(--accent-navy);
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      text-decoration: none;
+      z-index: 100;
+    }
+    .skip-link:focus {
+      left: 12px;
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    /* Universal WCAG 2.1 AA Focus Indicator */
+    :focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* ==========================================================================
+       2. TOP BAR & PRODUCT SUMMARY BANNER
+       ========================================================================== */
+    .top-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      max-width: 680px;
+    }
+
+    .field-group label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    select {
+      width: 100%;
+      min-height: 44px; /* WCAG 2.5.5 touch target */
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+
+    select:hover {
+      border-color: var(--accent-green);
+    }
+
+    .brand-banner {
+      background-color: var(--bg-banner);
+      border: 1px solid var(--border-banner);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 13.5px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px 16px;
+    }
+
+    /* ==========================================================================
+       3. RESPONSIVE TWO-COLUMN MASTER-DETAIL GRID
+       ========================================================================== */
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(270px, 0.95fr) minmax(320px, 1.45fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      min-width: 0; /* Prevents flex/grid blowout inside narrow Canvas iframes */
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .org-count {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    /* Organism List */
+    .org-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 620px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .org-list {
+        max-height: 290px;
+      }
+    }
+
+    .org-btn {
+      width: 100%;
+      min-height: 44px; /* WCAG 44px touch target */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      text-align: left;
+      font-family: inherit;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background-color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .org-btn:hover {
+      background-color: var(--bg-banner);
+      border-color: var(--accent-green);
+    }
+
+    .org-btn.active {
+      background-color: var(--bg-active);
+      border: 2px solid var(--accent-green);
+      padding: 7px 11px; /* Compensates for 2px border */
+      font-weight: 700;
+    }
+
+    .strain-tag {
+      font-size: 12px;
+      font-weight: 600;
+      background-color: var(--accent-navy-bg);
+      color: var(--accent-navy);
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .strain-tag.no-strain {
+      background-color: var(--bg-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-default);
+    }
+
+    /* ==========================================================================
+       4. STACKED PREVIEW PANEL SECTIONS (NO TABS)
+       ========================================================================== */
+    .detail-header {
+      border-bottom: 1px solid var(--border-default);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .detail-header h2 {
+      margin: 0 0 4px 0;
+      font-size: clamp(16.5px, 2.1vw, 19px);
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .detail-submeta {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* Conceptual Connection Callout Box */
+    .concept-box {
+      background-color: var(--accent-navy-bg);
+      border: 1px solid #c3d8e8;
+      border-left: 4px solid var(--accent-navy);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .concept-box.exact-match {
+      background-color: var(--bg-banner);
+      border-color: var(--border-banner);
+      border-left-color: var(--accent-green);
+    }
+
+    .concept-heading {
+      font-weight: 700;
+      color: var(--accent-navy);
+      margin-bottom: 3px;
+      font-size: 13px;
+    }
+
+    .concept-box.exact-match .concept-heading {
+      color: var(--accent-green);
+    }
+
+    /* Stacked Section Blocks */
+    .study-section {
+      padding-top: 14px;
+      margin-top: 14px;
+      border-top: 1px solid var(--border-default);
+    }
+
+    .study-section:first-of-type {
+      padding-top: 0;
+      margin-top: 0;
+      border-top: none;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .section-subtitle {
+      font-size: 12.5px;
+      font-weight: 400;
+      color: var(--text-secondary);
+    }
+
+    .count-pill {
+      background-color: var(--accent-navy);
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    /* Record Cards (16S, Genome, PubMed) */
+    .rec-card {
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background-color: #fcfdfd;
+    }
+
+    .rec-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .rec-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--accent-navy);
+      line-height: 1.4;
+    }
+
+    .rec-title-link {
+      color: var(--accent-navy);
+      text-decoration: none;
+    }
+
+    .rec-title-link:hover {
+      text-decoration: underline;
+    }
+
+    .scope-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background-color: var(--bg-banner);
+      color: var(--accent-green);
+      border: 1px solid var(--border-banner);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .rec-meta {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-btn {
+      min-height: 44px; /* WCAG 44px touch target */
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      border-radius: 5px;
+      border: 1px solid var(--accent-navy);
+      background-color: var(--accent-navy-bg);
+      color: var(--accent-navy);
+      cursor: pointer;
+    }
+
+    .mini-btn:hover {
+      background-color: #dce9f2;
+    }
+
+    .ext-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px; /* WCAG 44px touch target */
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-green);
+      text-decoration: none;
+    }
+
+    .ext-link:hover {
+      color: var(--accent-green-hover);
+      text-decoration: underline;
+    }
+
+    .section-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 18px;
+      margin-top: 4px;
+    }
+
+    /* Inline DNA Sequence Viewer */
+    .seq-wrapper {
+      margin-top: 10px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background-color: var(--bg-subtle);
+    }
+
+    .seq-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 6px 10px;
+      background-color: #e9eef2;
+      border-bottom: 1px solid var(--border-default);
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .copy-btn {
+      min-height: 36px;
+      padding: 5px 11px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: var(--accent-green);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--accent-green-hover);
+    }
+
+    .seq-box {
+      margin: 0;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 185px;
+      overflow-y: auto;
+      color: var(--text-primary);
+    }
+
+    /* Inline Abstract Viewer */
+    .abstract-box {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background-color: #ffffff;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      line-height: 1.52;
+      color: var(--text-primary);
+      white-space: pre-line;
+      max-height: 210px;
+      overflow-y: auto;
+    }
+
+    /* Warning / Educational Callout */
+    .note-box {
+      background-color: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 8px;
+      line-height: 1.45;
+    }
+
+    .status-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 4px 0 8px 0;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Top Scientific Dashboard Header -->
-  <header class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white shadow-md border-b border-slate-700">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <!-- Inline SVG DNA / Microbial Icon -->
-        <div class="bg-emerald-500/20 border border-emerald-400/30 p-2.5 rounded-xl text-emerald-300 shrink-0">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">Probiotic Strain, 16S rRNA &amp; PubMed Explorer</h1>
-          <p class="text-xs sm:text-sm text-slate-300">Student Microbiology Lab Reference · Live NCBI GenBank &amp; NIH PubMed Integration</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 text-xs text-emerald-200 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg self-start md:self-auto">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>NCBI E-Utilities Connected</span>
-      </div>
-    </div>
-  </header>
+  <main id="main-content" class="container">
+    <h1 class="sr-only">BIOS 110 Probiotic DNA &amp; Research Explorer</h1>
 
-  <!-- Main Workspace Container -->
-  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1 space-y-4">
-
-    <!-- Controls & Product Selector Card -->
-    <section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4" aria-label="Assigned Probiotic Selection">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-        <div class="lg:col-span-8">
-          <label for="product-select" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-            Select Your Assigned Probiotic Sample (16 Commercial Formulations)
-          </label>
-          <select
-            id="product-select"
-            class="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-900 shadow-sm focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 transition"
-          ></select>
-        </div>
-        <div class="lg:col-span-4">
-          <label for="org-filter" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-            Filter Organisms in Sample
-          </label>
-          <div class="relative">
-            <input
-              type="text"
-              id="org-filter"
-              placeholder="e.g., rhamnosus, GG, Bifidobacterium..."
-              class="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-8 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 transition"
-            />
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z" />
-            </svg>
-            <button
-              type="button"
-              id="clear-filter-btn"
-              title="Clear filter"
-              class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-700 text-xs font-semibold px-1.5 py-0.5 rounded"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Summary Banner -->
-      <div id="brand-banner" class="mt-4 pt-3.5 border-t border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3" aria-live="polite">
-        <!-- Populated dynamically via JS -->
+    <!-- Top Product Selector -->
+    <section class="top-bar" aria-label="Assigned Probiotic Selection">
+      <div class="field-group">
+        <label for="product-select">Select Your Assigned Probiotic Sample:</label>
+        <select id="product-select"></select>
       </div>
     </section>
 
-    <!-- Two-Column Master-Detail Explorer -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+    <!-- Sample & Biosafety Summary Banner -->
+    <div class="brand-banner" id="brand-banner" aria-live="polite"></div>
 
-      <!-- Left Panel: Listed Label Organisms -->
-      <section class="lg:col-span-5 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" aria-label="Listed Label Organisms">
-        <div class="bg-slate-50/90 border-b border-slate-200 px-4 py-3 flex items-center justify-between gap-2">
-          <div>
-            <h2 class="text-sm font-bold text-slate-800">Listed Label Organisms</h2>
-            <p class="text-xs text-slate-500">Click an organism to inspect 16S rRNA &amp; PubMed</p>
-          </div>
-          <span id="org-count" class="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full whitespace-nowrap"></span>
+    <!-- Responsive Master-Detail Grid -->
+    <div class="layout">
+      <!-- Left Column: Listed Label Organisms -->
+      <section class="panel" aria-labelledby="org-list-heading">
+        <div class="panel-header">
+          <h2 class="panel-title" id="org-list-heading">Listed Label Organisms</h2>
+          <span class="org-count" id="org-count" aria-live="polite"></span>
         </div>
-        <ul id="org-list" class="p-3 space-y-1.5 max-h-[620px] overflow-y-auto custom-scroll">
-          <!-- Populated dynamically via JS -->
-        </ul>
+        <ul class="org-list" id="org-list"></ul>
       </section>
 
-      <!-- Right Panel: Strain Inspector (16S rRNA + PubMed) -->
-      <section id="detail-panel" class="lg:col-span-7 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" aria-live="polite">
-        <!-- Persistent Strain Header -->
-        <div id="inspector-header" class="p-4 sm:p-5 border-b border-slate-200 bg-gradient-to-b from-slate-50/80 to-white">
-          <!-- Populated dynamically via JS -->
+      <!-- Right Column: Single Stacked Preview Panel (NO TABS) -->
+      <section class="panel" id="detail-panel" aria-labelledby="selected-org-heading" tabindex="-1">
+        <div class="detail-header">
+          <h2 id="selected-org-heading">Loading organism…</h2>
+          <div class="detail-submeta" id="selected-org-submeta"></div>
         </div>
 
-        <!-- View Mode / Navigation Tabs -->
-        <div class="border-b border-slate-200 bg-slate-50 px-4 flex flex-wrap items-center justify-between gap-2" role="tablist" aria-label="Sequence and Research Views">
-          <div class="flex space-x-1 -mb-px">
-            <button
-              type="button"
-              id="tab-16s"
-              role="tab"
-              aria-selected="true"
-              onclick="setActiveTab('16s')"
-              class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-emerald-600 text-emerald-700 bg-white rounded-t-lg transition flex items-center gap-1.5"
-            >
-              <span>16S rRNA Sequence Data</span>
-              <span id="tab-badge-16s" class="text-[11px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-full font-bold">…</span>
-            </button>
-            <button
-              type="button"
-              id="tab-pubmed"
-              role="tab"
-              aria-selected="false"
-              onclick="setActiveTab('pubmed')"
-              class="px-3.5 py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 rounded-t-lg transition flex items-center gap-1.5"
-            >
-              <span>Published Research (PubMed)</span>
-              <span id="tab-badge-pubmed" class="text-[11px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-full font-bold">…</span>
-            </button>
-            <button
-              type="button"
-              id="tab-split"
-              role="tab"
-              aria-selected="false"
-              onclick="setActiveTab('split')"
-              class="px-3 py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 rounded-t-lg transition hidden sm:inline-flex items-center gap-1"
-              title="View both 16S sequence records and PubMed studies stacked together"
-            >
-              <span>Combined View</span>
-            </button>
+        <!-- Conceptual Match Callout ("How this connects to your lab sample") -->
+        <div id="concept-callout" class="concept-box" aria-live="polite">
+          <div class="concept-heading">How this connects to your lab sample</div>
+          <div id="concept-text">Checking public reference records for this organism…</div>
+        </div>
+
+        <!-- Section 1: DNA Barcode (16S rRNA Gene) -->
+        <section class="study-section" aria-labelledby="sec-16s-heading">
+          <div class="section-header">
+            <h3 class="section-title" id="sec-16s-heading">
+              1. DNA Barcode (16S rRNA Gene)
+              <span class="section-subtitle">— Used in lab to identify bacterial species</span>
+            </h3>
+            <span class="count-pill" id="pill-16s">Loading…</span>
           </div>
-        </div>
+          <div id="content-16s" aria-live="polite"></div>
+        </section>
 
-        <!-- Tab Content Panels -->
-        <div class="p-4 sm:p-5 space-y-6">
-          <!-- 16S rRNA Content Container -->
-          <div id="view-16s" role="tabpanel" aria-labelledby="tab-16s"></div>
+        <!-- Section 2: Whole Genome Reference Check -->
+        <section class="study-section" aria-labelledby="sec-genome-heading">
+          <div class="section-header">
+            <h3 class="section-title" id="sec-genome-heading">
+              2. Whole Genome Reference Check
+              <span class="section-subtitle">— Complete genetic blueprint</span>
+            </h3>
+            <span class="count-pill" id="pill-genome">Loading…</span>
+          </div>
+          <div id="content-genome" aria-live="polite"></div>
+        </section>
 
-          <!-- Divider shown only in Combined View -->
-          <hr id="split-divider" class="hidden border-slate-200" />
-
-          <!-- PubMed Literature Content Container -->
-          <div id="view-pubmed" role="tabpanel" aria-labelledby="tab-pubmed"></div>
-        </div>
+        <!-- Section 3: Published Scientific Studies (PubMed) -->
+        <section class="study-section" aria-labelledby="sec-pubmed-heading">
+          <div class="section-header">
+            <h3 class="section-title" id="sec-pubmed-heading">
+              3. Published Scientific Studies (PubMed)
+              <span class="section-subtitle">— Peer-reviewed research</span>
+            </h3>
+            <span class="count-pill" id="pill-pubmed">Loading…</span>
+          </div>
+          <div id="content-pubmed" aria-live="polite"></div>
+        </section>
       </section>
-
     </div>
   </main>
-
-  <!-- Toast Notification Banner (Replaces alert() for copy confirmations) -->
-  <div id="toast-banner" class="fixed bottom-4 right-4 z-50 hidden bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-lg border border-slate-700 flex items-center gap-2">
-    <span class="text-emerald-400">✓</span>
-    <span id="toast-message">Copied to clipboard</span>
-  </div>
-
-  <footer class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-xs text-slate-500 border-t border-slate-200/80 mt-8">
-    Educational Microbiology Dashboard · Live data retrieved from NCBI Nucleotide (GenBank) &amp; NIH PubMed E-Utilities. Taxonomic aliases reflect updated 2020 <em>Lactobacillaceae</em> nomenclature.
-  </footer>
 
 <script>
 /**
  * ============================================================================
- * 1. UNIFIED PRODUCT CATALOG (All 16 Products + Complete Organism Lists)
+ * 1. COMPLETE 16-PRODUCT PROBIOTIC CATALOG
  * ============================================================================
  */
 const catalog = {
@@ -562,7 +981,7 @@ const catalog = {
 
 /**
  * ============================================================================
- * 2. TAXONOMIC NOMENCLATURE ALIASES (Bidirectional Legacy <-> Modern Mapping)
+ * 2. TAXONOMIC ALIASES (2020 Lactobacillaceae & Bifidobacterium Nomenclature)
  * ============================================================================
  */
 const taxonomicAliases = {
@@ -589,42 +1008,65 @@ const taxonomicAliases = {
 
 /**
  * ============================================================================
- * 3. APPLICATION STATE & IN-MEMORY CACHES
+ * 3. APPLICATION STATE, CACHES & RATE-LIMITED NCBI E-UTILITIES ENGINE
  * ============================================================================
  */
 let currentCode = "JARR";
 let selectedIdx = 0;
-let activeTab = "16s"; // '16s' | 'pubmed' | 'split'
-let filterText = "";
-let activeLoadToken = 0; // Prevents race conditions when rapidly clicking organisms
+let activeToken = 0;
 
 const nuccoreCache = {};
 const fastaCache = {};
+const genomeCache = {};
 const pubmedCache = {};
 const abstractCache = {};
 
-/**
- * Polite NCBI E-Utilities request queue to respect the 3 requests/sec unauthenticated rate limit.
- */
-let lastNcbiRequestTime = 0;
-async function politeFetch(url) {
-  const now = Date.now();
-  const minGap = 360; // ~2.7 req/sec max
-  const wait = Math.max(0, lastNcbiRequestTime + minGap - now);
-  lastNcbiRequestTime = now + wait;
-  if (wait > 0) {
-    await new Promise(resolve => setTimeout(resolve, wait));
-  }
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} from NCBI`);
-  }
-  return response;
+// NCBI recommended tool/email identifiers & >=360ms request spacing
+const NCBI_PARAMS = "&tool=bios110_probiotic_explorer&email=bios110@example.edu";
+let ncbiQueue = Promise.resolve();
+let lastCallTimestamp = 0;
+
+function fetchNcbiResilient(url, retries = 2) {
+  const fullUrl = url + NCBI_PARAMS;
+
+  const task = async () => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const now = Date.now();
+      const waitMs = Math.max(0, lastCallTimestamp + 360 - now);
+      if (waitMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      }
+      lastCallTimestamp = Date.now();
+
+      try {
+        const resp = await fetch(fullUrl, {
+          method: "GET",
+          mode: "cors",
+          credentials: "omit"
+        });
+        if (resp.status === 429 && attempt < retries) {
+          await new Promise(resolve => setTimeout(resolve, 750 * (attempt + 1)));
+          continue;
+        }
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}`);
+        }
+        return resp;
+      } catch (err) {
+        if (attempt === retries) throw err;
+        await new Promise(resolve => setTimeout(resolve, 600 * (attempt + 1)));
+      }
+    }
+  };
+
+  const chained = ncbiQueue.then(task, task);
+  ncbiQueue = chained.catch(() => {});
+  return chained;
 }
 
 /**
  * ============================================================================
- * 4. HELPER UTILITIES (Nomenclature, Sanitization, Nucleotide Composition, UI)
+ * 4. UTILITY HELPERS
  * ============================================================================
  */
 function cleanStrain(str) {
@@ -640,74 +1082,65 @@ function escapeHtml(str) {
     .replace(/'/g, "&#39;");
 }
 
-function getSpeciesAliases(species) {
+function getAliases(species) {
   return taxonomicAliases[species] || [species];
 }
 
-function buildOrganismClause(species, fieldTag = "[Organism]") {
-  const aliases = getSpeciesAliases(species);
-  if (aliases.length === 1) {
-    return `"${aliases[0]}"${fieldTag}`;
-  }
+function buildOrganismQuery(species, fieldTag = "[Organism]") {
+  const aliases = getAliases(species);
+  if (aliases.length === 1) return `"${aliases[0]}"${fieldTag}`;
   return "(" + aliases.map(a => `"${a}"${fieldTag}`).join(" OR ") + ")";
 }
 
-function calculateFastaStats(fastaText) {
-  const lines = fastaText.split(/\r?\n/);
-  const seq = lines.filter(line => !line.startsWith(">")).join("").toUpperCase().replace(/[^A-Z]/g, "");
+function computeFastaStats(fastaText) {
+  const seq = fastaText
+    .split(/\r?\n/)
+    .filter(line => !line.startsWith(">"))
+    .join("")
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
   if (!seq.length) return null;
   let gc = 0;
   for (let i = 0; i < seq.length; i++) {
     if (seq[i] === "G" || seq[i] === "C") gc++;
   }
-  const gcPercent = ((gc / seq.length) * 100).toFixed(1);
   return {
     length: seq.length,
-    gcPercent
+    gcPercent: ((gc / seq.length) * 100).toFixed(1)
   };
 }
 
-function showToast(msg) {
-  const banner = document.getElementById("toast-banner");
-  const msgEl = document.getElementById("toast-message");
-  if (!banner || !msgEl) return;
-  msgEl.textContent = msg;
-  banner.classList.remove("hidden");
-  clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => {
-    banner.classList.add("hidden");
-  }, 2400);
-}
-
-function copyTextFallback(text, label = "FASTA sequence") {
+function copyDnaToClipboard(text, btnEl) {
   try {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
     document.execCommand("copy");
-    document.body.removeChild(textarea);
-    showToast(`Copied ${label} to clipboard`);
+    document.body.removeChild(ta);
+    const orig = btnEl.textContent;
+    btnEl.textContent = "Copied!";
+    setTimeout(() => { btnEl.textContent = orig; }, 1800);
   } catch (e) {
-    showToast("Unable to copy text in this browser frame");
+    btnEl.textContent = "Select & Ctrl+C";
   }
 }
 
 /**
  * ============================================================================
- * 5. UI INITIALIZATION & PRODUCT/ORGANISM LIST RENDERING
+ * 5. PRODUCT SELECTOR & ORGANISM LIST RENDERING
  * ============================================================================
  */
-function initControls() {
+function initProductSelect() {
   const sel = document.getElementById("product-select");
   sel.innerHTML = "";
   Object.keys(catalog).forEach(code => {
-    const prod = catalog[code];
     const opt = document.createElement("option");
     opt.value = code;
-    opt.textContent = `${code} — ${prod.fullTitle} (${prod.organisms.length} organisms)`;
+    opt.textContent = `${code} — ${catalog[code].fullTitle}`;
     if (code === currentCode) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -715,244 +1148,67 @@ function initControls() {
   sel.addEventListener("change", () => {
     currentCode = sel.value;
     selectedIdx = 0;
-    filterText = "";
-    const filterInput = document.getElementById("org-filter");
-    filterInput.value = "";
-    document.getElementById("clear-filter-btn").classList.add("hidden");
-    renderProductBanner();
-    renderOrganismList();
-    inspectOrganism(0);
-  });
-
-  const filterInput = document.getElementById("org-filter");
-  const clearBtn = document.getElementById("clear-filter-btn");
-
-  filterInput.addEventListener("input", () => {
-    filterText = filterInput.value.trim().toLowerCase();
-    clearBtn.classList.toggle("hidden", filterText.length === 0);
-    renderOrganismList();
-  });
-
-  clearBtn.addEventListener("click", () => {
-    filterText = "";
-    filterInput.value = "";
-    clearBtn.classList.add("hidden");
-    renderOrganismList();
-    filterInput.focus();
+    renderBannerAndList();
+    selectOrganism(0);
   });
 }
 
-function renderProductBanner() {
+function renderBannerAndList() {
   const item = catalog[currentCode];
-  const total = item.organisms.length;
-  const strainSpecificCount = item.organisms.filter(o => o.strain && o.strain.trim() !== "").length;
-  const speciesOnlyCount = total - strainSpecificCount;
-
   document.getElementById("brand-banner").innerHTML = `
-    <div class="space-y-1">
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-900 text-white tracking-wide">
-          SAMPLE: ${escapeHtml(currentCode)}
-        </span>
-        <h2 class="text-sm sm:text-base font-bold text-slate-900">${escapeHtml(item.fullTitle)}</h2>
-      </div>
-    </div>
-    <div class="flex flex-wrap items-center gap-2 text-xs">
-      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-        ${escapeHtml(item.bsl)}
-      </span>
-      <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-medium">
-        Total: <strong class="ml-1 text-slate-900">${total}</strong>
-      </span>
-      <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200 text-sky-800 font-medium" title="Organisms with explicit strain codes vs. species-level listings">
-        <strong class="mr-1">${strainSpecificCount}</strong> Strain-designated · <strong class="mx-1">${speciesOnlyCount}</strong> Species-only
-      </span>
-    </div>
+    <div><strong>Sample ID:</strong> ${escapeHtml(currentCode)} &middot; <strong>Product:</strong> ${escapeHtml(item.fullTitle)}</div>
+    <div><strong>Biosafety:</strong> ${escapeHtml(item.bsl)}</div>
   `;
-}
 
-function renderOrganismList() {
-  const orgs = catalog[currentCode].organisms;
-  const listEl = document.getElementById("org-list");
-  const countEl = document.getElementById("org-count");
+  const orgs = item.organisms;
+  document.getElementById("org-count").textContent = `${orgs.length} listed ${orgs.length === 1 ? "organism" : "organisms"}`;
 
-  const filtered = orgs
-    .map((org, idx) => ({ org, idx }))
-    .filter(({ org }) => {
-      if (!filterText) return true;
-      const aliases = getSpeciesAliases(org.species).join(" ").toLowerCase();
-      return (
-        org.label.toLowerCase().includes(filterText) ||
-        org.species.toLowerCase().includes(filterText) ||
-        (org.strain && org.strain.toLowerCase().includes(filterText)) ||
-        aliases.includes(filterText)
-      );
-    });
-
-  countEl.textContent = filterText
-    ? `${filtered.length} of ${orgs.length} shown`
-    : `${orgs.length} ${orgs.length === 1 ? "organism" : "organisms"}`;
-
-  if (filtered.length === 0) {
-    listEl.innerHTML = `
-      <li class="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-        No organisms match "<strong>${escapeHtml(filterText)}</strong>" in this sample.
-      </li>
-    `;
-    return;
-  }
-
-  listEl.innerHTML = filtered.map(({ org, idx }) => {
-    const isSelected = idx === selectedIdx;
-    const isFungal = /^Saccharomyces/i.test(org.species);
+  document.getElementById("org-list").innerHTML = orgs.map((org, idx) => {
+    const isActive = idx === selectedIdx;
     const hasStrain = Boolean(org.strain && org.strain.trim());
-
+    const badgeText = hasStrain ? `Strain: ${escapeHtml(org.strain)}` : "No strain listed";
     return `
       <li>
         <button
           type="button"
-          onclick="inspectOrganism(${idx})"
-          aria-pressed="${isSelected}"
-          class="w-full text-left px-3 py-2.5 rounded-lg border transition flex items-center justify-between gap-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-600 ${
-            isSelected
-              ? "bg-emerald-50/90 border-emerald-600 text-slate-900 shadow-xs"
-              : "bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-700"
-          }"
+          class="org-btn ${isActive ? "active" : ""}"
+          aria-pressed="${isActive}"
+          ${isActive ? 'aria-current="true"' : ""}
+          onclick="selectOrganism(${idx})"
         >
-          <div class="min-w-0 flex-1">
-            <div class="text-xs sm:text-[13px] ${isSelected ? "font-bold text-emerald-950" : "font-medium text-slate-800"} truncate">
-              ${escapeHtml(org.label)}
-            </div>
-            ${isFungal ? `<div class="text-[11px] text-amber-700 font-medium mt-0.5">Yeast / Fungi (ITS / 28S rRNA)</div>` : ""}
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            ${
-              isFungal
-                ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200">Yeast</span>`
-                : ""
-            }
-            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-              hasStrain
-                ? "bg-sky-50 text-sky-800 border border-sky-200"
-                : "bg-slate-100 text-slate-600 border border-slate-200"
-            }">
-              ${hasStrain ? escapeHtml(org.strain) : "Species only"}
-            </span>
-          </div>
+          <span>${escapeHtml(org.label)}</span>
+          <span class="strain-tag ${hasStrain ? "" : "no-strain"}">${badgeText}</span>
         </button>
       </li>
     `;
   }).join("");
 }
 
-/**
- * ============================================================================
- * 6. TAB NAVIGATION & PERSISTENT ORGANISM HEADER
- * ============================================================================
- */
-function setActiveTab(tab) {
-  activeTab = tab;
-  const tabs = ["16s", "pubmed", "split"];
-  tabs.forEach(t => {
-    const btn = document.getElementById(`tab-${t}`);
-    if (!btn) return;
-    const isActive = t === tab;
-    btn.setAttribute("aria-selected", isActive ? "true" : "false");
-    if (isActive) {
-      btn.className = "px-3.5 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-emerald-600 text-emerald-700 bg-white rounded-t-lg transition flex items-center gap-1.5";
-    } else {
-      btn.className = "px-3.5 py-2.5 text-xs sm:text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300 rounded-t-lg transition flex items-center gap-1.5";
-    }
-  });
+function updateConceptCallout(org, exactStrainFound) {
+  const box = document.getElementById("concept-callout");
+  const textEl = document.getElementById("concept-text");
+  const cleanStr = cleanStrain(org.strain);
 
-  const view16s = document.getElementById("view-16s");
-  const viewPubmed = document.getElementById("view-pubmed");
-  const divider = document.getElementById("split-divider");
-
-  if (tab === "16s") {
-    view16s.classList.remove("hidden");
-    viewPubmed.classList.add("hidden");
-    divider.classList.add("hidden");
-  } else if (tab === "pubmed") {
-    view16s.classList.add("hidden");
-    viewPubmed.classList.remove("hidden");
-    divider.classList.add("hidden");
+  if (!cleanStr) {
+    box.classList.remove("exact-match");
+    textEl.innerHTML = `<strong>Species-Level Reference (No Strain Listed)</strong> — This product label lists only the species (<em>${escapeHtml(org.species)}</em>) without a specific strain ID, so a verified species reference is shown.`;
+  } else if (exactStrainFound) {
+    box.classList.add("exact-match");
+    textEl.innerHTML = `<strong>Exact Strain Reference Found</strong> — You are viewing a public GenBank reference sequence deposited for this exact strain (<strong>${escapeHtml(org.strain)}</strong>), not the raw sequencing file from your specific bottle.`;
   } else {
-    view16s.classList.remove("hidden");
-    viewPubmed.classList.remove("hidden");
-    divider.classList.remove("hidden");
+    box.classList.remove("exact-match");
+    textEl.innerHTML = `<strong>Species-Level Reference</strong> — Proprietary commercial strain &lsquo;<strong>${escapeHtml(org.strain)}</strong>&rsquo; is not publicly indexed in GenBank, so we are showing a verified reference sequence from the same species (<em>${escapeHtml(org.species)}</em>).`;
   }
 }
 
-function renderInspectorHeader(org, stats = {}) {
-  const aliases = getSpeciesAliases(org.species);
-  const altAliases = aliases.filter(a => a.toLowerCase() !== org.species.toLowerCase());
-  const isFungal = /^Saccharomyces/i.test(org.species);
-
-  const count16sLabel = isFungal
-    ? (stats.count16s !== undefined ? `${stats.count16s} ITS/28S Records` : "ITS / 28S rRNA")
-    : (stats.count16s !== undefined ? `${stats.count16s} 16S rRNA Records` : "Loading 16S…");
-
-  const countPubmedLabel = stats.countPubmed !== undefined
-    ? `${stats.countPubmed.toLocaleString()} PubMed Studies`
-    : "Loading PubMed…";
-
-  document.getElementById("inspector-header").innerHTML = `
-    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-      <div>
-        <div class="flex flex-wrap items-center gap-2">
-          <h3 class="text-base sm:text-lg font-bold text-slate-900">${escapeHtml(org.label)}</h3>
-          ${
-            org.strain
-              ? `<span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-200">Strain: ${escapeHtml(org.strain)}</span>`
-              : `<span class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Species-level listing</span>`
-          }
-        </div>
-        <div class="mt-1.5 text-xs text-slate-600 space-y-1">
-          <div>
-            <span class="font-semibold text-slate-700">Taxonomic Species:</span>
-            <em class="text-slate-900 font-medium">${escapeHtml(org.species)}</em>
-            ${
-              altAliases.length > 0
-                ? `<span class="text-slate-500"> · <span class="font-medium text-slate-600">Synonym / Updated Name:</span> <em>${escapeHtml(altAliases.join(", "))}</em></span>`
-                : ""
-            }
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Summary Pills -->
-      <div class="flex flex-wrap sm:flex-col items-start sm:items-end gap-1.5 shrink-0">
-        <button
-          type="button"
-          onclick="setActiveTab('16s')"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 transition shadow-2xs"
-        >
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-200"></span>
-          <span>${escapeHtml(count16sLabel)}</span>
-        </button>
-        <button
-          type="button"
-          onclick="setActiveTab('pubmed')"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-white hover:bg-slate-900 transition shadow-2xs"
-        >
-          <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span>
-          <span>${escapeHtml(countPubmedLabel)}</span>
-        </button>
-      </div>
-    </div>
-  `;
-}
-
 /**
  * ============================================================================
- * 7. NCBI NUCLEOTIDE (16S rRNA / FUNGAL ITS) FETCHING & FASTA INSPECTOR
+ * 6. SECTION 1: DNA BARCODE (16S rRNA GENE) LOADER
  * ============================================================================
  */
-async function fetchNuccoreRecords(term) {
-  const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=${encodeURIComponent(term)}&retmode=json&retmax=4`;
-  const resp = await politeFetch(searchUrl);
+async function queryNuccore16S(term) {
+  const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=${encodeURIComponent(term)}&retmode=json&retmax=2`;
+  const resp = await fetchNcbiResilient(searchUrl);
   const json = await resp.json();
 
   const count = parseInt(json?.esearchresult?.count, 10) || 0;
@@ -960,7 +1216,7 @@ async function fetchNuccoreRecords(term) {
   if (ids.length === 0) return { count, records: [] };
 
   const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nuccore&id=${ids.join(",")}&retmode=json`;
-  const sumResp = await politeFetch(sumUrl);
+  const sumResp = await fetchNcbiResilient(sumUrl);
   const sumJson = await sumResp.json();
 
   const records = ids.map(id => {
@@ -968,284 +1224,332 @@ async function fetchNuccoreRecords(term) {
     return {
       uid: id,
       accession: item.accessionversion || item.caption || id,
-      title: item.title || "Ribosomal RNA nucleotide sequence",
-      length: item.slen ? `${Number(item.slen).toLocaleString()} bp` : "Length unlisted",
-      updateDate: item.updatedate || ""
+      title: item.title || "16S ribosomal RNA gene sequence",
+      length: item.slen ? `${Number(item.slen).toLocaleString()} bp` : "Length unlisted"
     };
   });
 
   return { count, records };
 }
 
-async function toggleFastaSequence(uid, accession, slotId, btnEl) {
+async function toggleDnaSequence(uid, accession, slotId, btnEl) {
   const host = document.getElementById(slotId);
   if (!host) return;
 
-  if (!host.classList.contains("hidden")) {
+  const isExpanded = btnEl.getAttribute("aria-expanded") === "true";
+  if (isExpanded) {
     host.classList.add("hidden");
-    btnEl.textContent = "Show FASTA Sequence";
+    btnEl.setAttribute("aria-expanded", "false");
+    btnEl.textContent = "Show DNA sequence";
     return;
   }
 
   host.classList.remove("hidden");
-  btnEl.textContent = "Hide FASTA Sequence";
+  btnEl.setAttribute("aria-expanded", "true");
+  btnEl.textContent = "Hide DNA sequence";
 
   if (fastaCache[uid]) {
-    renderFastaBox(host, fastaCache[uid], accession);
+    renderDnaViewer(host, fastaCache[uid], accession);
     return;
   }
 
-  host.innerHTML = `
-    <div class="mt-2.5 p-3 rounded-lg bg-slate-900 text-slate-300 text-xs font-mono flex items-center gap-2">
-      <span class="inline-block w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
-      <span>Fetching FASTA record for ${escapeHtml(accession)} from NCBI GenBank…</span>
-    </div>
-  `;
+  host.innerHTML = `<div class="seq-wrapper"><div class="seq-box">Loading DNA sequence for ${escapeHtml(accession)}…</div></div>`;
 
   try {
     const fastaUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=${encodeURIComponent(uid)}&rettype=fasta&retmode=text`;
-    const resp = await politeFetch(fastaUrl);
+    const resp = await fetchNcbiResilient(fastaUrl);
     const text = (await resp.text()).trim();
-    if (!text) throw new Error("Empty FASTA response");
+    if (!text) throw new Error("Empty sequence");
     fastaCache[uid] = text;
-    renderFastaBox(host, text, accession);
+    renderDnaViewer(host, text, accession);
   } catch (err) {
     host.innerHTML = `
-      <div class="mt-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
-        Could not retrieve FASTA inline.
-        <a href="https://www.ncbi.nlm.nih.gov/nuccore/${encodeURIComponent(accession)}?report=fasta" target="_blank" rel="noopener" class="font-semibold underline ml-1">
-          View FASTA on NCBI GenBank ↗
-        </a>
+      <div class="note-box" style="margin-top:8px;">
+        Could not retrieve DNA sequence inline.
+        <a class="ext-link" href="https://www.ncbi.nlm.nih.gov/nuccore/${encodeURIComponent(accession)}?report=fasta" target="_blank" rel="noopener">View GenBank Record ↗</a>
       </div>
     `;
   }
 }
 
-function renderFastaBox(host, fastaText, accession) {
-  const stats = calculateFastaStats(fastaText);
-  const safeId = `copy-btn-${accession.replace(/[^a-zA-Z0-9]/g, "_")}`;
+function renderDnaViewer(host, fastaText, accession) {
+  const stats = computeFastaStats(fastaText);
+  const copyBtnId = `copy-${accession.replace(/[^a-zA-Z0-9]/g, "_")}`;
 
   host.innerHTML = `
-    <div class="mt-3 rounded-lg border border-slate-700 bg-slate-900 text-slate-100 overflow-hidden shadow-inner">
-      <div class="px-3 py-2 bg-slate-800 border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="font-mono font-semibold text-emerald-400">FASTA</span>
-          ${
-            stats
-              ? `<span class="px-2 py-0.5 rounded bg-slate-700 text-slate-200">Length: <strong>${stats.length.toLocaleString()} nt</strong></span>
-                 <span class="px-2 py-0.5 rounded bg-slate-700 text-emerald-300">GC Content: <strong>${stats.gcPercent}%</strong></span>`
-              : ""
-          }
-        </div>
-        <button
-          type="button"
-          id="${safeId}"
-          class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition cursor-pointer"
-        >
-          Copy FASTA
-        </button>
+    <div class="seq-wrapper">
+      <div class="seq-toolbar">
+        <span>
+          <strong>Reference DNA</strong>
+          ${stats ? ` &middot; Length: <strong>${stats.length.toLocaleString()} bp</strong> &middot; GC Content: <strong>${stats.gcPercent}%</strong>` : ""}
+        </span>
+        <button type="button" class="copy-btn" id="${copyBtnId}">Copy DNA sequence (for BLAST)</button>
       </div>
-      <pre class="p-3 text-[11px] leading-relaxed font-mono text-slate-200 whitespace-pre-wrap break-all max-h-52 overflow-y-auto custom-scroll">${escapeHtml(fastaText)}</pre>
+      <pre class="seq-box">${escapeHtml(fastaText)}</pre>
     </div>
   `;
 
-  const copyBtn = document.getElementById(safeId);
+  const copyBtn = document.getElementById(copyBtnId);
   if (copyBtn) {
-    copyBtn.addEventListener("click", () => copyTextFallback(fastaText, `${accession} FASTA`));
+    copyBtn.addEventListener("click", () => copyDnaToClipboard(fastaText, copyBtn));
   }
 }
 
 async function load16SSection(org, token) {
-  const container = document.getElementById("view-16s");
-  const badgeEl = document.getElementById("tab-badge-16s");
+  const contentEl = document.getElementById("content-16s");
+  const pillEl = document.getElementById("pill-16s");
   const blastUrl = "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&DATABASE=16S_ribosomal_RNA";
   const isFungal = /^Saccharomyces/i.test(org.species);
 
-  container.innerHTML = `
-    <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center gap-3 text-xs text-slate-600">
-      <span class="inline-block w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin shrink-0"></span>
-      <span>Searching NCBI Nucleotide for ${isFungal ? "fungal ITS / 28S rRNA" : "16S ribosomal RNA"} reference records…</span>
-    </div>
-  `;
+  pillEl.textContent = "Loading…";
+  contentEl.innerHTML = `<p class="status-text">Searching NCBI Nucleotide for ${isFungal ? "fungal ITS / 28S rRNA" : "full-length 16S rRNA"} reference sequences…</p>`;
 
   const cleanStr = cleanStrain(org.strain);
-  const orgClause = buildOrganismClause(org.species, "[Organism]");
+  const orgQuery = buildOrganismQuery(org.species, "[Organism]");
   const cacheKey = `${org.species}|${cleanStr}|${isFungal ? "ITS" : "16S"}`;
 
   try {
     let data = nuccoreCache[cacheKey];
     if (!data) {
       if (isFungal) {
-        // Fungal marker search (ITS / 28S rRNA)
-        const itsTerm = `${orgClause} AND ("internal transcribed spacer" OR "ITS1" OR "28S ribosomal RNA")`;
-        const itsRes = await fetchNuccoreRecords(itsTerm);
+        const itsTerm = `${orgQuery} AND ("internal transcribed spacer" OR "ITS1" OR "28S ribosomal RNA") AND 300:1800[SLEN]`;
+        const res = await queryNuccore16S(itsTerm);
         data = {
-          isFungal: true,
-          scope: "Fungal ITS / 28S rRNA Marker",
-          count: itsRes.count,
-          records: itsRes.records,
+          exactStrainFound: false,
+          count: res.count,
+          records: res.records,
           searchTerm: itsTerm
         };
       } else {
-        const strainTerm = cleanStr
-          ? `${orgClause} AND "${cleanStr}" AND ("16S ribosomal RNA" OR "16S rRNA")`
-          : "";
-        const speciesTerm = `${orgClause} AND ("16S ribosomal RNA" OR "16S rRNA")`;
+        // Filter 1150:1750[SLEN] so students always get full-length 16S rRNA genes (~1,500 bp), never whole genomes
+        const lengthFilter = `("16S ribosomal RNA"[Title] OR "16S rRNA"[Title]) AND 1150:1750[SLEN]`;
+        const strainTerm = cleanStr ? `${orgQuery} AND "${cleanStr}" AND ${lengthFilter}` : "";
+        const speciesTerm = `${orgQuery} AND ${lengthFilter}`;
 
-        let result = null;
-        let scope = "Species-level";
+        let res = null;
+        let exactStrainFound = false;
         let usedTerm = speciesTerm;
 
         if (strainTerm) {
-          const strainRes = await fetchNuccoreRecords(strainTerm);
+          const strainRes = await queryNuccore16S(strainTerm);
           if (strainRes.records.length > 0) {
-            result = strainRes;
-            scope = `Strain-matched (${cleanStr})`;
+            res = strainRes;
+            exactStrainFound = true;
             usedTerm = strainTerm;
           }
         }
-        if (!result) {
-          result = await fetchNuccoreRecords(speciesTerm);
-          scope = cleanStr
-            ? `Species-level fallback (no strain-tagged 16S entry for "${cleanStr}")`
-            : "Species-level reference";
+        if (!res) {
+          res = await queryNuccore16S(speciesTerm);
           usedTerm = speciesTerm;
         }
 
         data = {
-          isFungal: false,
-          scope,
-          count: result.count,
-          records: result.records,
+          exactStrainFound,
+          count: res.count,
+          records: res.records,
           searchTerm: usedTerm
         };
       }
       nuccoreCache[cacheKey] = data;
     }
 
-    if (token !== activeLoadToken) return null;
+    if (token !== activeToken) return;
 
-    badgeEl.textContent = data.count.toLocaleString();
+    updateConceptCallout(org, data.exactStrainFound);
+    pillEl.textContent = isFungal
+      ? `${data.count.toLocaleString()} ITS/28S`
+      : `${data.count.toLocaleString()} sequences`;
+
     const nucSearchUrl = `https://www.ncbi.nlm.nih.gov/nuccore/?term=${encodeURIComponent(data.searchTerm)}`;
 
-    const fungalCallout = isFungal
-      ? `
-        <div class="mb-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 text-xs space-y-1.5">
-          <div class="font-bold flex items-center gap-1.5 text-amber-900">
-            <span>Educational Note: Why doesn't <em>${escapeHtml(org.species)}</em> have a 16S rRNA gene?</span>
-          </div>
-          <p class="leading-relaxed">
-            <strong><em>${escapeHtml(org.species)}</em></strong> is a eukaryotic yeast (fungi), whereas <strong>16S rRNA</strong> is exclusive to prokaryotic ribosomes (Bacteria &amp; Archaea). In microbiology labs, yeast probiotics are identified using eukaryotic nuclear ribosomal markers such as the <strong>Internal Transcribed Spacer (ITS1/ITS2)</strong> or <strong>28S (LSU) rRNA</strong> shown below.
-          </p>
-        </div>
-      `
+    const fungalNote = isFungal
+      ? `<div class="note-box"><strong>Yeast / Non-Bacterial Taxon:</strong> <em>${escapeHtml(org.species)}</em> is a fungus (yeast), so it does not have a bacterial 16S rRNA gene. Instead, scientists use the fungal <strong>ITS / 28S rRNA</strong> region shown below.</div>`
       : "";
 
-    const recordsHtml = data.records.length === 0
-      ? `
-        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600">
-          No ${isFungal ? "ITS / 28S" : "16S rRNA"} nucleotide records were returned by this query. Try browsing NCBI Nucleotide directly below.
-        </div>
-      `
-      : `<div class="space-y-3">` + data.records.map((rec, rIdx) => {
-          const slotId = `fasta-slot-${token}-${rIdx}`;
+    const cardsHtml = data.records.length === 0
+      ? `<p class="status-text">No full-length 16S rRNA records matched this filter.</p>`
+      : data.records.map((rec, rIdx) => {
+          const slotId = `seq-slot-${token}-${rIdx}`;
           const genbankUrl = `https://www.ncbi.nlm.nih.gov/nuccore/${encodeURIComponent(rec.accession)}`;
           return `
-            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:border-slate-300 transition">
-              <div class="text-xs sm:text-[13px] font-semibold text-slate-900 leading-snug">
-                ${escapeHtml(rec.title)}
+            <article class="rec-card">
+              <div class="rec-title">${escapeHtml(rec.title)}</div>
+              <div class="rec-meta">
+                <strong>Sequence ID:</strong> ${escapeHtml(rec.accession)} &middot;
+                <strong>Length:</strong> ${escapeHtml(rec.length)}
               </div>
-              <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-600">
-                <span><strong class="text-slate-700">Accession:</strong> <code class="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-800">${escapeHtml(rec.accession)}</code></span>
-                <span><strong class="text-slate-700">Length:</strong> ${escapeHtml(rec.length)}</span>
-                ${rec.updateDate ? `<span><strong class="text-slate-700">Updated:</strong> ${escapeHtml(rec.updateDate)}</span>` : ""}
-              </div>
-              <div class="mt-2.5 flex flex-wrap items-center gap-2">
+              <div class="action-row">
                 <button
                   type="button"
-                  onclick="toggleFastaSequence('${rec.uid}', '${escapeHtml(rec.accession)}', '${slotId}', this)"
-                  class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-700 text-white hover:bg-emerald-800 transition cursor-pointer shadow-2xs"
-                >
-                  Show FASTA Sequence
-                </button>
-                <a
-                  href="${genbankUrl}"
-                  target="_blank"
-                  rel="noopener"
-                  class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition inline-flex items-center gap-1"
-                >
-                  <span>GenBank Record</span>
-                  <span aria-hidden="true">↗</span>
-                </a>
+                  class="mini-btn"
+                  aria-expanded="false"
+                  aria-controls="${slotId}"
+                  onclick="toggleDnaSequence('${rec.uid}', '${escapeHtml(rec.accession)}', '${slotId}', this)"
+                >Show DNA sequence</button>
+                <a class="ext-link" href="${genbankUrl}" target="_blank" rel="noopener">View GenBank Record ↗</a>
               </div>
               <div id="${slotId}" class="hidden"></div>
-            </div>
+            </article>
           `;
-        }).join("") + `</div>`;
+        }).join("");
 
-    container.innerHTML = `
-      <div>
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div>
-            <h4 class="text-sm font-bold text-slate-900">${isFungal ? "Fungal ITS / 28S rRNA Reference Sequences" : "16S Ribosomal RNA Reference Sequences"}</h4>
-            <p class="text-xs text-slate-500 mt-0.5">
-              <strong>Query Scope:</strong> <span class="text-emerald-800 font-medium">${escapeHtml(data.scope)}</span> · Showing top ${data.records.length} of ${data.count.toLocaleString()} GenBank records
-            </p>
-          </div>
-        </div>
-        ${fungalCallout}
-        ${recordsHtml}
-        <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3 text-xs">
-          <a
-            href="${nucSearchUrl}"
-            target="_blank"
-            rel="noopener"
-            class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
-          >
-            <span>Browse All ${data.count.toLocaleString()} Records on NCBI Nucleotide</span>
-            <span aria-hidden="true">↗</span>
-          </a>
-          <span class="text-slate-300">|</span>
-          <a
-            href="${blastUrl}"
-            target="_blank"
-            rel="noopener"
-            class="inline-flex items-center gap-1.5 font-semibold text-sky-700 hover:text-sky-900 hover:underline"
-          >
-            <span>Open NCBI BLAST (16S rRNA Database)</span>
-            <span aria-hidden="true">↗</span>
-          </a>
-        </div>
+    contentEl.innerHTML = `
+      ${fungalNote}
+      ${cardsHtml}
+      <div class="section-footer">
+        <a class="ext-link" href="${nucSearchUrl}" target="_blank" rel="noopener">Browse all ${data.count.toLocaleString()} 16S sequences on NCBI Nucleotide ↗</a>
+        <a class="ext-link" href="${blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST (16S rRNA Database) ↗</a>
       </div>
     `;
-
-    return data.count;
   } catch (err) {
-    if (token !== activeLoadToken) return null;
-    badgeEl.textContent = "!";
-    const fallbackUrl = `https://www.ncbi.nlm.nih.gov/nuccore/?term=${encodeURIComponent(orgClause + ' AND "16S ribosomal RNA"')}`;
-    container.innerHTML = `
-      <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
-        <div class="font-bold">NCBI Nucleotide API temporarily unreachable or rate-limited.</div>
-        <p>You can still inspect reference sequences directly on NCBI using the links below:</p>
-        <div class="flex flex-wrap gap-3 pt-1">
-          <a href="${fallbackUrl}" target="_blank" rel="noopener" class="font-semibold underline">Search NCBI Nucleotide ↗</a>
-          <a href="${blastUrl}" target="_blank" rel="noopener" class="font-semibold underline">Open NCBI BLAST (16S rRNA DB) ↗</a>
-        </div>
+    if (token !== activeToken) return;
+    pillEl.textContent = "Unavailable";
+    updateConceptCallout(org, false);
+
+    const fallbackUrl = `https://www.ncbi.nlm.nih.gov/nuccore/?term=${encodeURIComponent(orgQuery + ' AND "16S ribosomal RNA"')}`;
+    contentEl.innerHTML = `
+      <div class="note-box">Could not load 16S rRNA records inside the Canvas frame due to network or rate limits.</div>
+      <div class="action-row">
+        <button type="button" class="mini-btn" onclick="selectOrganism(${selectedIdx})">Retry</button>
+        <a class="ext-link" href="${fallbackUrl}" target="_blank" rel="noopener">Browse 16S sequences on NCBI Nucleotide ↗</a>
+        <a class="ext-link" href="${blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST (16S rRNA Database) ↗</a>
       </div>
     `;
-    return 0;
   }
 }
 
 /**
  * ============================================================================
- * 8. NIH PUBMED LITERATURE FETCHING & INLINE ABSTRACT VIEWER
+ * 7. SECTION 2: WHOLE GENOME REFERENCE CHECK (NCBI ASSEMBLY)
  * ============================================================================
  */
-async function fetchPubMedArticles(term) {
-  const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmode=json&retmax=5&sort=relevance`;
-  const resp = await politeFetch(searchUrl);
+async function queryAssembly(term) {
+  const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=assembly&term=${encodeURIComponent(term)}&retmode=json&retmax=1`;
+  const resp = await fetchNcbiResilient(searchUrl);
+  const json = await resp.json();
+
+  const count = parseInt(json?.esearchresult?.count, 10) || 0;
+  const ids = json?.esearchresult?.idlist || [];
+  if (ids.length === 0) return { count, example: null };
+
+  const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=assembly&id=${ids[0]}&retmode=json`;
+  const sumResp = await fetchNcbiResilient(sumUrl);
+  const sumJson = await sumResp.json();
+  const doc = (sumJson.result && sumJson.result[ids[0]]) || {};
+
+  return {
+    count,
+    example: {
+      accession: doc.assemblyaccession || "Reference Assembly",
+      name: doc.assemblyname || "",
+      organism: doc.organism || "",
+      level: doc.assemblystatus || "Genome Assembly"
+    }
+  };
+}
+
+async function loadGenomeSection(org, token) {
+  const contentEl = document.getElementById("content-genome");
+  const pillEl = document.getElementById("pill-genome");
+  const isFungal = /^Saccharomyces/i.test(org.species);
+
+  pillEl.textContent = "Checking…";
+  contentEl.innerHTML = `<p class="status-text">Checking NCBI Genome for complete genetic blueprints…</p>`;
+
+  const cleanStr = cleanStrain(org.strain);
+  const orgQuery = buildOrganismQuery(org.species, "[Organism]");
+  const cacheKey = `${org.species}|${cleanStr}|GENOME`;
+
+  try {
+    let data = genomeCache[cacheKey];
+    if (!data) {
+      let res = null;
+      let isStrainSpecific = false;
+      let searchTerm = orgQuery;
+
+      if (cleanStr) {
+        const strainTerm = `${orgQuery} AND "${cleanStr}"`;
+        const strainRes = await queryAssembly(strainTerm);
+        if (strainRes.count > 0) {
+          res = strainRes;
+          isStrainSpecific = true;
+          searchTerm = strainTerm;
+        }
+      }
+
+      if (!res) {
+        res = await queryAssembly(orgQuery);
+        searchTerm = orgQuery;
+      }
+
+      data = {
+        count: res.count,
+        example: res.example,
+        isStrainSpecific,
+        searchTerm
+      };
+      genomeCache[cacheKey] = data;
+    }
+
+    if (token !== activeToken) return;
+
+    pillEl.textContent = data.count > 0 ? `${data.count.toLocaleString()} genomes` : "0 assemblies";
+    const datasetsUrl = `https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=${encodeURIComponent(getAliases(org.species)[0])}`;
+    const sizeNote = isFungal ? "~12 million bp (yeast genome)" : "~1.8–3.5 million bp (vs. ~1,500 bp for the 16S gene alone)";
+
+    if (data.count > 0) {
+      const scopeExplanation = data.isStrainSpecific
+        ? `An entire sequenced genome exists in NCBI for exact strain <strong>${escapeHtml(org.strain)}</strong> (${sizeNote}).`
+        : cleanStr
+          ? `Commercial strain <strong>${escapeHtml(org.strain)}</strong> does not have a public whole-genome assembly, but <strong>${data.count.toLocaleString()} whole genomes</strong> exist in NCBI for <em>${escapeHtml(org.species)}</em> (${sizeNote}).`
+          : `<strong>${data.count.toLocaleString()} whole genomes</strong> exist in NCBI for <em>${escapeHtml(org.species)}</em> (${sizeNote}).`;
+
+      const exMeta = data.example
+        ? `<div class="rec-meta"><strong>Example Genome ID:</strong> ${escapeHtml(data.example.accession)} &middot; <strong>Assembly Level:</strong> ${escapeHtml(data.example.level)}</div>`
+        : "";
+
+      contentEl.innerHTML = `
+        <article class="rec-card">
+          <div class="rec-title" style="margin-bottom:4px;">Whole Genome Sequenced &amp; Available on NCBI</div>
+          <div class="rec-meta" style="color:var(--text-primary);">${scopeExplanation}</div>
+          ${exMeta}
+          <div class="action-row">
+            <a class="ext-link" href="${datasetsUrl}" target="_blank" rel="noopener">Explore Whole Genomes on NCBI ↗</a>
+          </div>
+        </article>
+      `;
+    } else {
+      contentEl.innerHTML = `
+        <article class="rec-card">
+          <div class="rec-meta">No public whole-genome assemblies were returned under this exact taxon name, though 16S rRNA barcode records are available above.</div>
+          <div class="action-row">
+            <a class="ext-link" href="${datasetsUrl}" target="_blank" rel="noopener">Explore Whole Genomes on NCBI ↗</a>
+          </div>
+        </article>
+      `;
+    }
+  } catch (err) {
+    if (token !== activeToken) return;
+    pillEl.textContent = "Unavailable";
+    const datasetsUrl = `https://www.ncbi.nlm.nih.gov/datasets/genome/?taxon=${encodeURIComponent(getAliases(org.species)[0])}`;
+    contentEl.innerHTML = `
+      <div class="status-text">Could not verify whole-genome counts inside the frame.</div>
+      <div class="action-row">
+        <button type="button" class="mini-btn" onclick="selectOrganism(${selectedIdx})">Retry</button>
+        <a class="ext-link" href="${datasetsUrl}" target="_blank" rel="noopener">Explore Whole Genomes on NCBI ↗</a>
+      </div>
+    `;
+  }
+}
+
+/**
+ * ============================================================================
+ * 8. SECTION 3: PUBLISHED SCIENTIFIC STUDIES (PUBMED) + INLINE XML ABSTRACTS
+ * ============================================================================
+ */
+async function queryPubMedTop2(term) {
+  const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmode=json&retmax=2&sort=relevance`;
+  const resp = await fetchNcbiResilient(searchUrl);
   const json = await resp.json();
 
   const totalCount = parseInt(json?.esearchresult?.count, 10) || 0;
@@ -1253,19 +1557,17 @@ async function fetchPubMedArticles(term) {
   if (pmids.length === 0) return { totalCount, articles: [] };
 
   const sumUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(",")}&retmode=json`;
-  const sumResp = await politeFetch(sumUrl);
+  const sumResp = await fetchNcbiResilient(sumUrl);
   const sumJson = await sumResp.json();
 
   const articles = pmids.map(id => {
     const art = (sumJson.result && sumJson.result[id]) || {};
-    const authors = art.authors && art.authors.length > 0
-      ? (art.authors.length > 2 ? `${art.authors[0].name}, ${art.authors[1].name} et al.` : art.authors.map(a => a.name).join(", "))
-      : "Authors unlisted";
+    const firstAuthor = art.authors && art.authors.length > 0 ? `${art.authors[0].name} et al.` : "Author unlisted";
     const year = art.pubdate ? art.pubdate.slice(0, 4) : "";
     return {
       pmid: id,
-      title: art.title || `PubMed Article ${id}`,
-      authors,
+      title: art.title || `PubMed Study ${id}`,
+      firstAuthor,
       journal: art.source || "Journal unlisted",
       year
     };
@@ -1278,242 +1580,202 @@ async function toggleAbstract(pmid, slotId, btnEl) {
   const host = document.getElementById(slotId);
   if (!host) return;
 
-  if (!host.classList.contains("hidden")) {
+  const isExpanded = btnEl.getAttribute("aria-expanded") === "true";
+  if (isExpanded) {
     host.classList.add("hidden");
-    btnEl.textContent = "View Abstract";
+    btnEl.setAttribute("aria-expanded", "false");
+    btnEl.textContent = "Show abstract";
     return;
   }
 
   host.classList.remove("hidden");
-  btnEl.textContent = "Hide Abstract";
+  btnEl.setAttribute("aria-expanded", "true");
+  btnEl.textContent = "Hide abstract";
 
   if (abstractCache[pmid]) {
-    host.innerHTML = `<div class="mt-2.5 p-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 leading-relaxed whitespace-pre-line">${escapeHtml(abstractCache[pmid])}</div>`;
+    host.innerHTML = `<div class="abstract-box">${escapeHtml(abstractCache[pmid])}</div>`;
     return;
   }
 
-  host.innerHTML = `
-    <div class="mt-2.5 p-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
-      <span class="inline-block w-3 h-3 border-2 border-slate-600 border-t-transparent rounded-full animate-spin"></span>
-      <span>Loading abstract from NIH PubMed (PMID: ${escapeHtml(pmid)})…</span>
-    </div>
-  `;
+  host.innerHTML = `<div class="abstract-box">Loading abstract from NIH PubMed (PMID: ${escapeHtml(pmid)})…</div>`;
 
   try {
-    const absUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${encodeURIComponent(pmid)}&rettype=abstract&retmode=text`;
-    const resp = await politeFetch(absUrl);
-    const rawText = (await resp.text()).trim();
-    const cleaned = rawText || "No abstract text available in PubMed for this record.";
-    abstractCache[pmid] = cleaned;
-    host.innerHTML = `<div class="mt-2.5 p-3 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 leading-relaxed whitespace-pre-line max-h-60 overflow-y-auto custom-scroll">${escapeHtml(cleaned)}</div>`;
+    const xmlUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${encodeURIComponent(pmid)}&retmode=xml`;
+    const resp = await fetchNcbiResilient(xmlUrl);
+    const xmlString = await resp.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    const abstractNodes = Array.from(xmlDoc.querySelectorAll("AbstractText"));
+
+    let parsedText = "";
+    if (abstractNodes.length > 0) {
+      parsedText = abstractNodes.map(node => {
+        const label = node.getAttribute("Label");
+        const body = node.textContent.trim();
+        return label ? `${label}: ${body}` : body;
+      }).join("\n\n");
+    } else {
+      parsedText = "No abstract text is indexed in PubMed for this article. Click 'Open on PubMed' to view publisher details.";
+    }
+
+    abstractCache[pmid] = parsedText;
+    host.innerHTML = `<div class="abstract-box">${escapeHtml(parsedText)}</div>`;
   } catch (err) {
     host.innerHTML = `
-      <div class="mt-2.5 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
-        Could not load abstract inline. <a href="https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(pmid)}/" target="_blank" rel="noopener" class="font-semibold underline">Read on PubMed ↗</a>
+      <div class="note-box" style="margin-top:8px;">
+        Could not load abstract inline.
+        <a class="ext-link" href="https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(pmid)}/" target="_blank" rel="noopener">Open on PubMed ↗</a>
       </div>
     `;
   }
 }
 
 async function loadPubMedSection(org, token) {
-  const container = document.getElementById("view-pubmed");
-  const badgeEl = document.getElementById("tab-badge-pubmed");
+  const contentEl = document.getElementById("content-pubmed");
+  const pillEl = document.getElementById("pill-pubmed");
 
-  container.innerHTML = `
-    <div class="p-5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center gap-3 text-xs text-slate-600">
-      <span class="inline-block w-4 h-4 border-2 border-slate-700 border-t-transparent rounded-full animate-spin shrink-0"></span>
-      <span>Querying NIH PubMed for peer-reviewed studies on <em>${escapeHtml(org.species)}</em>…</span>
-    </div>
-  `;
+  pillEl.textContent = "Searching…";
+  contentEl.innerHTML = `<p class="status-text">Searching NIH PubMed for peer-reviewed probiotic research…</p>`;
 
   const cleanStr = cleanStrain(org.strain);
-  const titleAbsClause = buildOrganismClause(org.species, "[Title/Abstract]");
-  const cacheKey = `${org.species}|${cleanStr}|PUBMED`;
+  const titleAbsQuery = buildOrganismQuery(org.species, "[Title/Abstract]");
+  const cacheKey = `${org.species}|${cleanStr}|PUBMED_TIERED`;
 
   try {
     let data = pubmedCache[cacheKey];
     if (!data) {
-      const strainTerm = cleanStr ? `${titleAbsClause} AND "${cleanStr}"` : "";
-      const speciesTerm = `${titleAbsClause} AND probiotic`;
+      let res = null;
+      let scopeBadge = "";
+      let usedTerm = "";
 
-      let result = null;
-      let scope = "";
-      let usedTerm = speciesTerm;
-      let fallbackNotice = false;
-
-      if (strainTerm) {
-        const strainRes = await fetchPubMedArticles(strainTerm);
-        if (strainRes.totalCount > 0) {
-          result = strainRes;
-          scope = `Strain-specific (${cleanStr})`;
-          usedTerm = strainTerm;
-        } else {
-          fallbackNotice = true;
+      // Tier 1: "Species" AND "Strain" AND probiotic
+      if (cleanStr) {
+        const tier1Term = `${titleAbsQuery} AND "${cleanStr}" AND probiotic`;
+        const t1 = await queryPubMedTop2(tier1Term);
+        if (t1.totalCount > 0) {
+          res = t1;
+          scopeBadge = "Strain + Probiotic";
+          usedTerm = tier1Term;
         }
       }
 
-      if (!result) {
-        result = await fetchPubMedArticles(speciesTerm);
-        scope = cleanStr
-          ? `Species-level probiotic literature (0 exact PubMed hits for proprietary code "${cleanStr}")`
-          : "Species-level probiotic literature";
-        usedTerm = speciesTerm;
+      // Tier 2: "Species" AND "Strain" (any important publication on that strain)
+      if (!res && cleanStr) {
+        const tier2Term = `${titleAbsQuery} AND "${cleanStr}"`;
+        const t2 = await queryPubMedTop2(tier2Term);
+        if (t2.totalCount > 0) {
+          res = t2;
+          scopeBadge = "Strain Study";
+          usedTerm = tier2Term;
+        }
+      }
+
+      // Tier 3: "Species" AND probiotic
+      if (!res) {
+        const tier3Term = `${titleAbsQuery} AND probiotic`;
+        res = await queryPubMedTop2(tier3Term);
+        scopeBadge = "Species + Probiotic";
+        usedTerm = tier3Term;
       }
 
       data = {
-        totalCount: result.totalCount,
-        articles: result.articles,
-        scope,
-        usedTerm,
-        fallbackNotice
+        totalCount: res.totalCount,
+        articles: res.articles,
+        scopeBadge,
+        usedTerm
       };
       pubmedCache[cacheKey] = data;
     }
 
-    if (token !== activeLoadToken) return null;
+    if (token !== activeToken) return;
 
-    badgeEl.textContent = data.totalCount.toLocaleString();
+    pillEl.textContent = `${data.totalCount.toLocaleString()} studies`;
     const pubmedSearchUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(data.usedTerm)}`;
 
-    const fallbackBanner = data.fallbackNotice
-      ? `
-        <div class="mb-3.5 p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-950 text-xs leading-relaxed">
-          <strong>Educational Search Note:</strong> Manufacturers often assign proprietary house strain codes (such as <code>${escapeHtml(cleanStr)}</code>) that do not appear in academic paper titles. We automatically broadened the search to peer-reviewed probiotic studies for <em>${escapeHtml(org.species)}</em>.
-        </div>
-      `
-      : "";
-
     const articlesHtml = data.articles.length === 0
-      ? `
-        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-600">
-          No indexed PubMed citations matched this exact query. Use the link below to explore broader terms on NIH PubMed.
-        </div>
-      `
-      : `<ul class="space-y-3">` + data.articles.map((art, aIdx) => {
+      ? `<p class="status-text">No exact PubMed matches found. Use the link below to search directly on NIH PubMed.</p>`
+      : data.articles.map((art, aIdx) => {
           const slotId = `abs-slot-${token}-${aIdx}`;
           const articleUrl = `https://pubmed.ncbi.nlm.nih.gov/${encodeURIComponent(art.pmid)}/`;
           return `
-            <li class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:border-slate-300 transition">
-              <a
-                href="${articleUrl}"
-                target="_blank"
-                rel="noopener"
-                class="text-xs sm:text-[13px] font-semibold text-sky-900 hover:text-emerald-800 hover:underline leading-snug block"
-              >
-                ${escapeHtml(art.title)}
-              </a>
-              <div class="mt-1.5 text-[11px] text-slate-600 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span>${escapeHtml(art.authors)}</span>
-                <span>·</span>
-                <em class="text-slate-800 font-medium">${escapeHtml(art.journal)}</em>
-                ${art.year ? `<span>(${escapeHtml(art.year)})</span>` : ""}
-                <span>·</span>
-                <span class="font-mono text-slate-500">PMID: ${escapeHtml(art.pmid)}</span>
+            <article class="rec-card">
+              <div class="rec-top-row">
+                <div class="rec-title">
+                  <a class="rec-title-link" href="${articleUrl}" target="_blank" rel="noopener">${escapeHtml(art.title)}</a>
+                </div>
+                <span class="scope-badge">${escapeHtml(data.scopeBadge)}</span>
               </div>
-              <div class="mt-2.5 flex flex-wrap items-center gap-2">
+              <div class="rec-meta">
+                ${escapeHtml(art.firstAuthor)} &middot; <em>${escapeHtml(art.journal)}</em> ${art.year ? `(${escapeHtml(art.year)})` : ""} &middot; PMID: ${escapeHtml(art.pmid)}
+              </div>
+              <div class="action-row">
                 <button
                   type="button"
+                  class="mini-btn"
+                  aria-expanded="false"
+                  aria-controls="${slotId}"
                   onclick="toggleAbstract('${art.pmid}', '${slotId}', this)"
-                  class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                >
-                  View Abstract
-                </button>
-                <a
-                  href="${articleUrl}"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-xs font-semibold text-emerald-700 hover:text-emerald-900 hover:underline inline-flex items-center gap-1 px-1.5 py-1"
-                >
-                  <span>Full Citation on PubMed</span>
-                  <span aria-hidden="true">↗</span>
-                </a>
+                >Show abstract</button>
+                <a class="ext-link" href="${articleUrl}" target="_blank" rel="noopener">Open on PubMed ↗</a>
               </div>
               <div id="${slotId}" class="hidden"></div>
-            </li>
+            </article>
           `;
-        }).join("") + `</ul>`;
+        }).join("");
 
-    container.innerHTML = `
-      <div>
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div>
-            <h4 class="text-sm font-bold text-slate-900">Published Biomedical Literature (NIH PubMed)</h4>
-            <p class="text-xs text-slate-500 mt-0.5">
-              <strong>Match Scope:</strong> <span class="text-sky-800 font-medium">${escapeHtml(data.scope)}</span> · Showing top ${data.articles.length} of ${data.totalCount.toLocaleString()} studies
-            </p>
-          </div>
-        </div>
-        ${fallbackBanner}
-        ${articlesHtml}
-        <div class="mt-4 pt-3 border-t border-slate-100">
-          <a
-            href="${pubmedSearchUrl}"
-            target="_blank"
-            rel="noopener"
-            class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
-          >
-            <span>View All ${data.totalCount.toLocaleString()} Results on NIH PubMed</span>
-            <span aria-hidden="true">↗</span>
-          </a>
-        </div>
+    contentEl.innerHTML = `
+      ${articlesHtml}
+      <div class="section-footer">
+        <a class="ext-link" href="${pubmedSearchUrl}" target="_blank" rel="noopener">View all ${data.totalCount.toLocaleString()} studies on NIH PubMed ↗</a>
       </div>
     `;
-
-    return data.totalCount;
   } catch (err) {
-    if (token !== activeLoadToken) return null;
-    badgeEl.textContent = "!";
-    const fallbackUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(titleAbsClause + " AND probiotic")}`;
-    container.innerHTML = `
-      <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
-        <div class="font-bold">NIH PubMed API temporarily unreachable or rate-limited.</div>
-        <p><a href="${fallbackUrl}" target="_blank" rel="noopener" class="font-semibold underline">Open search directly on NIH PubMed ↗</a></p>
+    if (token !== activeToken) return;
+    pillEl.textContent = "Unavailable";
+    const fallbackUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(titleAbsQuery + " AND probiotic")}`;
+    contentEl.innerHTML = `
+      <div class="note-box">Could not load NIH PubMed studies inside the Canvas frame.</div>
+      <div class="action-row">
+        <button type="button" class="mini-btn" onclick="selectOrganism(${selectedIdx})">Retry</button>
+        <a class="ext-link" href="${fallbackUrl}" target="_blank" rel="noopener">View studies on NIH PubMed ↗</a>
       </div>
     `;
-    return 0;
   }
 }
 
 /**
  * ============================================================================
- * 9. MASTER INSPECTOR COORDINATOR
+ * 9. MAIN COORDINATOR
  * ============================================================================
  */
-async function inspectOrganism(idx) {
+function selectOrganism(idx) {
   selectedIdx = idx;
-  renderOrganismList();
+  renderBannerAndList();
 
   const org = catalog[currentCode].organisms[idx];
   if (!org) return;
 
-  const token = ++activeLoadToken;
-  document.getElementById("tab-badge-16s").textContent = "…";
-  document.getElementById("tab-badge-pubmed").textContent = "…";
+  const token = ++activeToken;
+  const hasStrain = Boolean(org.strain && org.strain.trim());
 
-  renderInspectorHeader(org, {});
+  document.getElementById("selected-org-heading").textContent = org.label;
+  document.getElementById("selected-org-submeta").innerHTML = `
+    <strong>Species:</strong> <em>${escapeHtml(org.species)}</em> &middot;
+    <strong>Strain on Bottle:</strong> ${hasStrain ? escapeHtml(org.strain) : "No strain listed"}
+  `;
 
-  // Execute 16S and PubMed queries through the polite rate-limited queue
-  const [count16s, countPubmed] = await Promise.all([
-    load16SSection(org, token),
-    loadPubMedSection(org, token)
-  ]);
+  updateConceptCallout(org, false);
 
-  if (token === activeLoadToken) {
-    renderInspectorHeader(org, {
-      count16s: count16s ?? 0,
-      countPubmed: countPubmed ?? 0
-    });
-  }
+  // Queue all 3 lookups sequentially via fetchNcbiResilient (360ms spacing)
+  load16SSection(org, token);
+  loadGenomeSection(org, token);
+  loadPubMedSection(org, token);
 }
 
-// Boot the dashboard on load
-window.addEventListener("DOMContentLoaded", () => {
-  initControls();
-  renderProductBanner();
-  renderOrganismList();
-  setActiveTab("16s");
-  inspectOrganism(0);
-});
+// Initialize BIOS 110 Dashboard
+initProductSelect();
+renderBannerAndList();
+selectOrganism(0);
 </script>
 </body>
 </html>
