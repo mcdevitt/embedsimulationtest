@@ -46,6 +46,7 @@
       color: var(--text-primary);
       line-height: 1.48;
       font-size: 14px;
+      overflow-x: hidden;
     }
 
     .skip-link {
@@ -194,8 +195,6 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      max-height: 132px;
-      overflow-y: auto;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
       gap: 6px;
@@ -203,7 +202,7 @@
 
     .org-btn {
       width: 100%;
-      min-height: 40px;
+      min-height: 44px;
       display: flex;
       align-items: center;
       padding: 6px 10px;
@@ -474,7 +473,7 @@
       line-height: 1.45;
       white-space: pre-wrap;
       word-break: break-all;
-      max-height: 155px;
+      max-height: 165px;
       overflow-y: auto;
       color: var(--text-primary);
     }
@@ -490,8 +489,21 @@
       line-height: 1.52;
       color: var(--text-primary);
       white-space: pre-line;
-      max-height: 210px;
+      max-height: 185px;
       overflow-y: auto;
+    }
+
+    /* Inline Abstract Viewer */
+    .abstract-box {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background-color: #ffffff;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      line-height: 1.52;
+      color: var(--text-primary);
+      white-space: pre-line;
     }
 
     /* Warning / Educational Callout */
@@ -1322,7 +1334,7 @@
               "<span><strong>DNA Sequence Preview</strong></span>" +
               '<a class="ext-link" href="' + genbankUrl + '" target="_blank" rel="noopener">View GenBank Record ↗</a>' +
             "</div>" +
-            '<pre class="seq-box">' + escapeHtml(fastaText) + "</pre>" +
+            '<pre class="seq-box" tabindex="0" role="region" aria-label="16S DNA sequence text">' + escapeHtml(fastaText) + "</pre>" +
           "</div>";
       }
 
@@ -1657,7 +1669,7 @@
         btnEl.textContent = "Hide abstract";
 
         if (abstractCache[pmid]) {
-          host.innerHTML = '<div class="abstract-box">' + escapeHtml(abstractCache[pmid]) + "</div>";
+          host.innerHTML = '<div class="abstract-box" tabindex="0" role="region" aria-label="Study abstract text">' + escapeHtml(abstractCache[pmid]) + "</div>";
           return;
         }
 
@@ -1683,7 +1695,7 @@
           }
 
           abstractCache[pmid] = parsedText;
-          host.innerHTML = '<div class="abstract-box">' + escapeHtml(parsedText) + "</div>";
+          host.innerHTML = '<div class="abstract-box" tabindex="0" role="region" aria-label="Study abstract text">' + escapeHtml(parsedText) + "</div>";
         } catch (err) {
           host.innerHTML =
             '<div class="note-box" style="margin-top:8px;">' +
