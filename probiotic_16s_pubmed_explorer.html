@@ -2,37 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Probiotic Label Explorer — PubMed & 16S rRNA Reference Links</title>
+<title>Probiotic 16S rRNA Reference Explorer</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; margin: 12px; color: #222; background: #fafafa; }
   .top-bar { background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
-  .field { display: flex; flex-direction: column; font-size: 13px; max-width: 620px; }
+  .field { display: flex; flex-direction: column; font-size: 13px; max-width: 640px; }
   .field label { font-weight: 600; margin-bottom: 4px; }
   select { padding: 7px 9px; border: 1px solid #bbb; border-radius: 4px; font-size: 13px; background: #fff; color: #222; }
   .brand-banner { background: #eef6f3; border: 1px solid #cce3da; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
-  .layout { display: grid; grid-template-columns: 1.05fr 1.25fr; gap: 12px; align-items: start; }
-  @media (max-width: 740px) { .layout { grid-template-columns: 1fr; } }
+  .layout { display: grid; grid-template-columns: 1.05fr 1.35fr; gap: 12px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
   .panel { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 12px; }
   .panel-header { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: #222; display: flex; justify-content: space-between; gap: 8px; }
-  .org-list { list-style: none; padding: 0; margin: 0; max-height: 360px; overflow-y: auto; }
+  .org-list { list-style: none; padding: 0; margin: 0; max-height: 380px; overflow-y: auto; }
   .org-btn { width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 4px; cursor: pointer; font-size: 12.5px; border: 1px solid #e2e2e2; background: #fff; color: #222; margin-bottom: 5px; }
   .org-btn:hover, .org-btn:focus { background: #eef6f3; border-color: #137356; outline: 2px solid #137356; outline-offset: 1px; }
   .org-btn.active { background: #e3f2ed; border-color: #137356; font-weight: 600; }
   .strain-tag { font-size: 11px; background: #eef2f6; color: #1b4f72; padding: 2px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
-  .pubmed-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 8px; gap: 8px; }
-  .pubmed-header h3 { margin: 0; font-size: 15px; color: #137356; }
+  .detail-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 8px; gap: 8px; }
+  .detail-header h3 { margin: 0; font-size: 15px; color: #137356; }
   .count-pill { background: #1b4f72; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
-  .meta-line { font-size: 12px; color: #444; margin-bottom: 8px; }
-  .paper-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
-  .paper-list li { padding: 7px 0; border-bottom: 1px solid #f0f0f0; }
-  .paper-list li:last-child { border-bottom: none; }
-  .paper-title { font-weight: 600; color: #1b4f72; text-decoration: none; display: block; margin-bottom: 2px; }
-  .paper-title:hover { text-decoration: underline; }
-  .paper-meta { color: #555; font-size: 11px; }
-  .ext-link { display: inline-block; margin-top: 8px; margin-right: 12px; font-size: 12px; font-weight: 600; color: #137356; text-decoration: none; }
+  .meta-line { font-size: 12px; color: #444; margin-bottom: 10px; }
+  .rec-card { border: 1px solid #e3e7ea; border-radius: 5px; padding: 8px 10px; margin-bottom: 8px; background: #fcfdfd; font-size: 12px; }
+  .rec-title { font-weight: 600; color: #1b4f72; margin-bottom: 3px; }
+  .rec-meta { color: #555; font-size: 11px; margin-bottom: 6px; }
+  .action-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .mini-btn { padding: 4px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; border: 1px solid #1b4f72; background: #eef4f8; color: #1b4f72; cursor: pointer; }
+  .mini-btn:hover { background: #dce9f2; }
+  .ext-link { font-size: 11.5px; font-weight: 600; color: #137356; text-decoration: none; }
   .ext-link:hover { text-decoration: underline; }
-  .sec-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid #e6e6e6; }
-  .sec-title { font-size: 13px; font-weight: 700; color: #1b4f72; margin: 0 0 6px 0; }
+  .fasta-box { margin-top: 6px; background: #f4f6f8; border: 1px solid #d8dee4; border-radius: 4px; padding: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 170px; overflow-y: auto; color: #222; }
+  .note-box { background: #fff9eb; border: 1px solid #f2dfb3; color: #5c4400; border-radius: 5px; padding: 8px 10px; font-size: 12px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -50,7 +50,7 @@
   <div class="layout">
     <div class="panel" role="region" aria-label="Listed Label Organisms">
       <div class="panel-header">
-        <span>Listed Label Organisms (Click to search PubMed & 16S)</span>
+        <span>Listed Label Organisms (Click to inspect 16S)</span>
         <span id="org-count" style="color:#137356;"></span>
       </div>
       <ul class="org-list" id="org-list"></ul>
@@ -78,26 +78,152 @@ const catalog = {
       { label: "Bifidobacterium longum R0175", species: "Bifidobacterium longum", strain: "R0175" }
     ]
   },
+  "REN+": {
+    fullTitle: "Renew Life Ultimate Flora Probiotic Daily Mood+ 65 Billion CFU",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
+      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium lactis", strain: "UF-12" },
+      { label: "Bifidobacterium breve UF-3", species: "Bifidobacterium breve", strain: "UF-3" },
+      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
+      { label: "Bifidobacterium bifidum UF-910", species: "Bifidobacterium bifidum", strain: "UF-910" },
+      { label: "Lactobacillus plantarum UF-217", species: "Lactobacillus plantarum", strain: "UF-217" },
+      { label: "Lactobacillus plantarum UF-937", species: "Lactobacillus plantarum", strain: "UF-937" },
+      { label: "Lactobacillus acidophilus UF-01", species: "Lactobacillus acidophilus", strain: "UF-01" },
+      { label: "Lactobacillus acidophilus UF-5", species: "Lactobacillus acidophilus", strain: "UF-5" },
+      { label: "Lactobacillus paracasei UF-19", species: "Lactobacillus paracasei", strain: "UF-19" },
+      { label: "Lactobacillus rhamnosus GG", species: "Lactobacillus rhamnosus", strain: "GG" },
+      { label: "Streptococcus thermophilus UF-336", species: "Streptococcus thermophilus", strain: "UF-336" },
+      { label: "Lactobacillus salivarius UF-862", species: "Lactobacillus salivarius", strain: "UF-862" },
+      { label: "Lactobacillus gasseri UF-2055", species: "Lactobacillus gasseri", strain: "UF-2055" },
+      { label: "Lactobacillus brevis UF-35", species: "Lactobacillus brevis", strain: "UF-35" },
+      { label: "Lactobacillus bulgaricus UF-165", species: "Lactobacillus bulgaricus", strain: "UF-165" },
+      { label: "Bifidobacterium lactis UF-IM04", species: "Bifidobacterium lactis", strain: "UF-IM04" },
+      { label: "Bifidobacterium lactis UF-019", species: "Bifidobacterium lactis", strain: "UF-019" },
+      { label: "Bifidobacterium lactis UF-07", species: "Bifidobacterium lactis", strain: "UF-07" },
+      { label: "Bifidobacterium lactis UF-26", species: "Bifidobacterium lactis", strain: "UF-26" }
+    ]
+  },
+  "REND": {
+    fullTitle: "Renew Life Ultimate Flora Probiotic Digestive Once Daily 65 Billion CFU",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
+      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium lactis", strain: "UF-12" },
+      { label: "Bifidobacterium lactis UF-IM04", species: "Bifidobacterium lactis", strain: "UF-IM04" },
+      { label: "Bifidobacterium lactis UF-50", species: "Bifidobacterium lactis", strain: "UF-50" },
+      { label: "Bifidobacterium lactis UF-DG19", species: "Bifidobacterium lactis", strain: "UF-DG19" },
+      { label: "Bifidobacterium lactis UF-07", species: "Bifidobacterium lactis", strain: "UF-07" },
+      { label: "Bifidobacterium lactis UF-26", species: "Bifidobacterium lactis", strain: "UF-26" },
+      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
+      { label: "Bifidobacterium bifidum UF-910", species: "Bifidobacterium bifidum", strain: "UF-910" },
+      { label: "Bifidobacterium breve UF-3", species: "Bifidobacterium breve", strain: "UF-3" },
+      { label: "Lactobacillus plantarum UF-217", species: "Lactobacillus plantarum", strain: "UF-217" },
+      { label: "Lactobacillus plantarum UF-987", species: "Lactobacillus plantarum", strain: "UF-987" },
+      { label: "Lactobacillus plantarum UF-115", species: "Lactobacillus plantarum", strain: "UF-115" },
+      { label: "Lactococcus lactis UF-23", species: "Lactococcus lactis", strain: "UF-23" },
+      { label: "Lactobacillus fermentum UF-120", species: "Lactobacillus fermentum", strain: "UF-120" },
+      { label: "Lactobacillus fermentum UF-226", species: "Lactobacillus fermentum", strain: "UF-226" },
+      { label: "Lactobacillus rhamnosus GG", species: "Lactobacillus rhamnosus", strain: "GG" },
+      { label: "Lactobacillus rhamnosus UF-11", species: "Lactobacillus rhamnosus", strain: "UF-11" },
+      { label: "Lactobacillus casei UF-431", species: "Lactobacillus casei", strain: "UF-431" },
+      { label: "Lactobacillus casei UF-121", species: "Lactobacillus casei", strain: "UF-121" },
+      { label: "Lactobacillus gasseri UF-2055", species: "Lactobacillus gasseri", strain: "UF-2055" },
+      { label: "Lactobacillus reuteri UF-14", species: "Lactobacillus reuteri", strain: "UF-14" },
+      { label: "Lactobacillus paracasei UF-19", species: "Lactobacillus paracasei", strain: "UF-19" },
+      { label: "Lactobacillus brevis UF-35", species: "Lactobacillus brevis", strain: "UF-35" },
+      { label: "Lactobacillus helveticus UF-142", species: "Lactobacillus helveticus", strain: "UF-142" },
+      { label: "Lactobacillus salivarius UF-862", species: "Lactobacillus salivarius", strain: "UF-862" },
+      { label: "Streptococcus thermophilus UF-336", species: "Streptococcus thermophilus", strain: "UF-336" },
+      { label: "Lactobacillus bulgaricus UF-563", species: "Lactobacillus bulgaricus", strain: "UF-563" },
+      { label: "Lactobacillus bulgaricus UF-165", species: "Lactobacillus bulgaricus", strain: "UF-165" },
+      { label: "Bifidobacterium infantis UF-019", species: "Bifidobacterium infantis", strain: "UF-019" }
+    ]
+  },
+  "PHYS": {
+    fullTitle: "Physician's Choice 60 Billion Probiotic",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
+      { label: "Lacticaseibacillus casei", species: "Lacticaseibacillus casei", strain: "" },
+      { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
+      { label: "Lacticaseibacillus paracasei", species: "Lacticaseibacillus paracasei", strain: "" },
+      { label: "Ligilactobacillus salivarius", species: "Ligilactobacillus salivarius", strain: "" },
+      { label: "Lactiplantibacillus plantarum", species: "Lactiplantibacillus plantarum", strain: "" },
+      { label: "Bifidobacterium lactis", species: "Bifidobacterium lactis", strain: "" },
+      { label: "Bifidobacterium bifidum", species: "Bifidobacterium bifidum", strain: "" },
+      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" },
+      { label: "Bifidobacterium breve", species: "Bifidobacterium breve", strain: "" },
+      { label: "Lactobacillus bulgaricus", species: "Lactobacillus bulgaricus", strain: "" }
+    ]
+  },
   "ASCU": {
     fullTitle: "Ascuoli Pre+ProBiotic 300 Billion CFU",
     bsl: "BLS 1 Bacteria",
     organisms: [
+      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" },
       { label: "Bifidobacterium longum HRVD90b", species: "Bifidobacterium longum", strain: "HRVD90b" },
+      { label: "Bifidobacterium breve", species: "Bifidobacterium breve", strain: "" },
       { label: "Bifidobacterium breve HRVD521", species: "Bifidobacterium breve", strain: "HRVD521" },
       { label: "Lactiplantibacillus plantarum LP1", species: "Lactiplantibacillus plantarum", strain: "LP1" },
       { label: "Lacticaseibacillus rhamnosus LR6", species: "Lacticaseibacillus rhamnosus", strain: "LR6" },
+      { label: "Lacticaseibacillus rhamnosus HRVD113", species: "Lacticaseibacillus rhamnosus", strain: "HRVD113" },
+      { label: "Lacticaseibacillus rhamnosus", species: "Lacticaseibacillus rhamnosus", strain: "" },
       { label: "Bifidobacterium infantis M63", species: "Bifidobacterium infantis", strain: "M63" },
-      { label: "Lactobacillus crispatus LCR01", species: "Lactobacillus crispatus", strain: "LCR01" }
+      { label: "Bifidobacterium lactis BS5", species: "Bifidobacterium lactis", strain: "BS5" },
+      { label: "Bifidobacterium lactis HRVD524", species: "Bifidobacterium lactis", strain: "HRVD524" },
+      { label: "Bifidobacterium lactis SD150", species: "Bifidobacterium lactis", strain: "SD150" },
+      { label: "Lactobacillus crispatus LCR01", species: "Lactobacillus crispatus", strain: "LCR01" },
+      { label: "Lacticaseibacillus casei HRVD300", species: "Lacticaseibacillus casei", strain: "HRVD300" },
+      { label: "Limosilactobacillus fermentum LF8", species: "Limosilactobacillus fermentum", strain: "LF8" },
+      { label: "Limosilactobacillus reuteri RD830", species: "Limosilactobacillus reuteri", strain: "RD830" },
+      { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
+      { label: "Ligilactobacillus salivarius LS1", species: "Ligilactobacillus salivarius", strain: "LS1" },
+      { label: "Bifidobacterium lactis", species: "Bifidobacterium lactis", strain: "" },
+      { label: "Bifidobacterium longum CECT7347", species: "Bifidobacterium longum", strain: "CECT7347" },
+      { label: "Lacticaseibacillus casei CECT9104", species: "Lacticaseibacillus casei", strain: "CECT9104" },
+      { label: "Bifidobacterium bifidum", species: "Bifidobacterium bifidum", strain: "" },
+      { label: "Lactiplantibacillus plantarum LPLDL", species: "Lactiplantibacillus plantarum", strain: "LPLDL" },
+      { label: "Bifidobacterium lactis MB2409", species: "Bifidobacterium lactis", strain: "MB2409" }
     ]
   },
-  "BAKA": {
-    fullTitle: "Bakakoul Vaginal Probiotics 10 Billion CFU",
+  "ZEBO": {
+    fullTitle: "Zebora 3-in-1 Probiotics 100 Billion Organisms",
     bsl: "BLS 1 Bacteria",
     organisms: [
+      { label: "Lactiplantibacillus plantarum", species: "Lactiplantibacillus plantarum", strain: "" },
       { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
-      { label: "Lactobacillus rhamnosus", species: "Lactobacillus rhamnosus", strain: "" },
-      { label: "Lactobacillus reuteri", species: "Lactobacillus reuteri", strain: "" },
-      { label: "Lactobacillus fermentum", species: "Lactobacillus fermentum", strain: "" }
+      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" },
+      { label: "Lacticaseibacillus rhamnosus", species: "Lacticaseibacillus rhamnosus", strain: "" },
+      { label: "Bifidobacterium lactis", species: "Bifidobacterium lactis", strain: "" },
+      { label: "Limosilactobacillus reuteri", species: "Limosilactobacillus reuteri", strain: "" },
+      { label: "Lactobacillus gasseri", species: "Lactobacillus gasseri", strain: "" },
+      { label: "Bifidobacterium breve", species: "Bifidobacterium breve", strain: "" },
+      { label: "Bifidobacterium bifidum", species: "Bifidobacterium bifidum", strain: "" },
+      { label: "Lactobacillus casei", species: "Lactobacillus casei", strain: "" },
+      { label: "Lactobacillus paracasei", species: "Lactobacillus paracasei", strain: "" },
+      { label: "Streptococcus thermophiles", species: "Streptococcus thermophiles", strain: "" },
+      { label: "Bacillus coagulans", species: "Bacillus coagulans", strain: "" },
+      { label: "Lactococcus lactis", species: "Lactococcus lactis", strain: "" },
+      { label: "Lactobacillus helveticus", species: "Lactobacillus helveticus", strain: "" }
+    ]
+  },
+  "UPNO": {
+    fullTitle: "Upnourish Probiotics 200 Billion CFU",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
+      { label: "Bifidobacterium longum CCFM760", species: "Bifidobacterium longum", strain: "CCFM760" },
+      { label: "Bifidobacterium animalis BA051", species: "Bifidobacterium animalis", strain: "BA051" },
+      { label: "Lactobacillus rhamnosus LR663", species: "Lactobacillus rhamnosus", strain: "LR663" },
+      { label: "Lactobacillus acidophilus L59", species: "Lactobacillus acidophilus", strain: "L59" },
+      { label: "Bifidobacterium lactis BL03", species: "Bifidobacterium lactis", strain: "BL03" },
+      { label: "Lactobacillus plantarum CCFM8727", species: "Lactobacillus plantarum", strain: "CCFM8727" },
+      { label: "Lactobacillus reuteri HR7", species: "Lactobacillus reuteri", strain: "HR7" },
+      { label: "Lactobacillus fermentum HLF67", species: "Lactobacillus fermentum", strain: "HLF67" },
+      { label: "Lactobacillus paracasei HPC69", species: "Lactobacillus paracasei", strain: "HPC69" },
+      { label: "Bifidobacterium breve HBB37", species: "Bifidobacterium breve", strain: "HBB37" },
+      { label: "Lactobacillus casei HC5", species: "Lactobacillus casei", strain: "HC5" },
+      { label: "Lactobacillus salivarius HLS89", species: "Lactobacillus salivarius", strain: "HLS89" },
+      { label: "Lactobacillus bulgaricus HB68", species: "Lactobacillus bulgaricus", strain: "HB68" },
+      { label: "Lactobacillus crispatus HLC28", species: "Lactobacillus crispatus", strain: "HLC28" },
+      { label: "Bifidobacterium bifidum BB67", species: "Bifidobacterium bifidum", strain: "BB67" }
     ]
   },
   "BIOM": {
@@ -113,16 +239,55 @@ const catalog = {
       { label: "Saccharomyces boulardii", species: "Saccharomyces boulardii", strain: "" }
     ]
   },
+  "NEXA": {
+    fullTitle: "DrFormulas Nexabiotic Advanced Gastrointestinal Support 17.25 Billion CFU",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
+      { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
+      { label: "Bacillus subtilis DE111®", species: "Bacillus subtilis", strain: "DE111®" },
+      { label: "Bacillus clausii", species: "Bacillus clausii", strain: "" },
+      { label: "Saccharomyces boulardii", species: "Saccharomyces boulardii", strain: "" },
+      { label: "Streptococcus thermophilus", species: "Streptococcus thermophilus", strain: "" },
+      { label: "Lactobacillus rhamnosus LB3", species: "Lactobacillus rhamnosus", strain: "LB3" },
+      { label: "Bifidobacterium animalis lactis", species: "Bifidobacterium animalis", strain: "lactis" },
+      { label: "Lactobacillus plantarum A1", species: "Lactobacillus plantarum", strain: "A1" },
+      { label: "Lactobacillus rhamnosus A1", species: "Lactobacillus rhamnosus", strain: "A1" },
+      { label: "Lactobacillus casei", species: "Lactobacillus casei", strain: "" },
+      { label: "Lactobacillus helveticus", species: "Lactobacillus helveticus", strain: "" },
+      { label: "Lactobacillus salivarius", species: "Lactobacillus salivarius", strain: "" },
+      { label: "Lactococcus lactis", species: "Lactococcus lactis", strain: "" },
+      { label: "Lactobacillus paracasei", species: "Lactobacillus paracasei", strain: "" },
+      { label: "Lactobacillus brevis", species: "Lactobacillus brevis", strain: "" },
+      { label: "Lactobacillus gasseri", species: "Lactobacillus gasseri", strain: "" },
+      { label: "Bifidobacterium bifidum", species: "Bifidobacterium bifidum", strain: "" },
+      { label: "Bifidobacterium breve", species: "Bifidobacterium breve", strain: "" },
+      { label: "Bifidobacterium animalis lactis/infantis", species: "Bifidobacterium animalis", strain: "lactis/infantis" },
+      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" },
+      { label: "Lactobacillus reuteri", species: "Lactobacillus reuteri", strain: "" },
+      { label: "Lactobacillus plantarum B2", species: "Lactobacillus plantarum", strain: "B2" },
+      { label: "Lactobacillus rhamnosus B2", species: "Lactobacillus rhamnosus", strain: "B2" }
+    ]
+  },
   "GARD": {
     fullTitle: "Garden of Life Probiotics Sport+ 50 Billion Pre+Pro+Postbiotics",
     bsl: "BLS 1 Bacteria",
     organisms: [
+      { label: "Bifidobacterium lactis BL818", species: "Bifidobacterium lactis", strain: "BL818" },
+      { label: "Bifidobacterium lactis BL-04", species: "Bifidobacterium lactis", strain: "BL-04" },
+      { label: "Bifidobacterium bifidum Bb-06", species: "Bifidobacterium bifidum", strain: "Bb-06" },
+      { label: "Bifidobacterium breve Bb-18", species: "Bifidobacterium breve", strain: "Bb-18" },
+      { label: "Bifidobacterium longum Bl-05", species: "Bifidobacterium longum", strain: "Bl-05" },
       { label: "Lactobacillus acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
-      { label: "Lactobacillus plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
-      { label: "Lactobacillus rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
-      { label: "Bifidobacterium lactis BL-04", species: "Bifidobacterium animalis subsp. lactis", strain: "BL-04" },
-      { label: "Bacillus subtilis DE111", species: "Bacillus subtilis", strain: "DE111" },
-      { label: "Bacillus coagulans SNZ 1969", species: "Bacillus coagulans", strain: "SNZ 1969" }
+      { label: "Lactobacillus brevis Lbr-35", species: "Lactobacillus brevis", strain: "Lbr-35" },
+      { label: "Lactobacillus casei Lc-11", species: "Lactobacillus casei", strain: "Lc-11" },
+      { label: "Lactobacillus gasseri Lg-36", species: "Lactobacillus gasseri", strain: "Lg-36" },
+      { label: "Lactobacillus paracasei Lpc-37", species: "Lactobacillus paracasei", strain: "Lpc-37" },
+      { label: "Lactobacillus plantarum Lp-115", species: "Lactobacillus plantarum", strain: "Lp-115" },
+      { label: "Lactobacillus rhamnosus GG", species: "Lactobacillus rhamnosus", strain: "GG" },
+      { label: "Lactobacillus rhamnosus HN001™", species: "Lactobacillus rhamnosus", strain: "HN001™" },
+      { label: "Lactobacillus salivarius Ls-33", species: "Lactobacillus salivarius", strain: "Ls-33" },
+      { label: "Bacillus subtilis DE111®", species: "Bacillus subtilis", strain: "DE111®" },
+      { label: "Bacillus coagulans SNZ 1969™", species: "Bacillus coagulans", strain: "SNZ 1969™" }
     ]
   },
   "LEAN": {
@@ -140,73 +305,99 @@ const catalog = {
       { label: "Bifidobacterium breve", species: "Bifidobacterium breve", strain: "" }
     ]
   },
-  "NEXA": {
-    fullTitle: "DrFormulas Nexabiotic Advanced Gastrointestinal Support 17.25 Billion CFU",
+  "WFMK": {
+    fullTitle: "356 Whole Foods Market Adult 50+ Probiotic 5 Billion CFU",
     bsl: "BLS 1 Bacteria",
     organisms: [
-      { label: "Bacillus subtilis DE111", species: "Bacillus subtilis", strain: "DE111" },
-      { label: "Bacillus clausii", species: "Bacillus clausii", strain: "" },
-      { label: "Saccharomyces boulardii", species: "Saccharomyces boulardii", strain: "" },
-      { label: "Streptococcus thermophilus", species: "Streptococcus thermophilus", strain: "" },
+      { label: "Lactobacillus acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "Lactobacillus plantarum Lp-115", species: "Lactobacillus plantarum", strain: "Lp-115" },
+      { label: "Bifidobacterium bifidum Bb-06", species: "Bifidobacterium bifidum", strain: "Bb-06" },
+      { label: "Bifidobacterium longum Bl-05", species: "Bifidobacterium longum", strain: "Bl-05" },
+      { label: "Lactobacillus brevis Lbr-35", species: "Lactobacillus brevis", strain: "Lbr-35" },
+      { label: "Bifidobacterium breve Bb-03", species: "Bifidobacterium breve", strain: "Bb-03" },
+      { label: "Lactobacillus casei Lc-11", species: "Lactobacillus casei", strain: "Lc-11" },
+      { label: "Lactobacillus paracasei Lpc-37", species: "Lactobacillus paracasei", strain: "Lpc-37" },
+      { label: "Streptococcus thermophilus St-21", species: "Streptococcus thermophilus", strain: "St-21" },
+      { label: "Bifidobacterium lactis Bl-04", species: "Bifidobacterium lactis", strain: "Bl-04" }
+    ]
+  },
+  "BAKA": {
+    fullTitle: "Bakakoul Vaginal Probiotics 10 Billion CFU",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
       { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
-      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" }
-    ]
-  },
-  "PHYS": {
-    fullTitle: "Physician's Choice 60 Billion Probiotic",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Lacticaseibacillus casei", species: "Lacticaseibacillus casei", strain: "" },
-      { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
-      { label: "Lacticaseibacillus paracasei", species: "Lacticaseibacillus paracasei", strain: "" },
-      { label: "Ligilactobacillus salivarius", species: "Ligilactobacillus salivarius", strain: "" },
-      { label: "Lactiplantibacillus plantarum", species: "Lactiplantibacillus plantarum", strain: "" },
-      { label: "Bifidobacterium lactis", species: "Bifidobacterium lactis", strain: "" },
-      { label: "Bifidobacterium bifidum", species: "Bifidobacterium bifidum", strain: "" },
-      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" },
-      { label: "Bifidobacterium breve", species: "Bifidobacterium breve", strain: "" },
-      { label: "Lactobacillus bulgaricus", species: "Lactobacillus delbrueckii subsp. bulgaricus", strain: "" }
-    ]
-  },
-  "REN+": {
-    fullTitle: "Renew Life Ultimate Flora Probiotic Daily Mood+ 65 Billion CFU",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium animalis subsp. lactis", strain: "UF-12" },
-      { label: "Bifidobacterium breve UF-3", species: "Bifidobacterium breve", strain: "UF-3" },
-      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
-      { label: "Lactobacillus rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
-      { label: "Streptococcus thermophilus UF-336", species: "Streptococcus thermophilus", strain: "UF-336" }
-    ]
-  },
-  "REND": {
-    fullTitle: "Renew Life Ultimate Flora Probiotic Digestive Once Daily 65 Billion CFU",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium animalis subsp. lactis", strain: "UF-12" },
-      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
-      { label: "Lactobacillus rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
-      { label: "Lactobacillus plantarum UF-115", species: "Lactiplantibacillus plantarum", strain: "UF-115" }
-    ]
-  },
-  "RENM": {
-    fullTitle: "Renew Life Ultimate Flora Probiotic Mens's Once Daily 65 Billion CFU",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Lactobacillus rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
-      { label: "Lactobacillus plantarum UF-115", species: "Lactiplantibacillus plantarum", strain: "UF-115" },
-      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
-      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium animalis subsp. lactis", strain: "UF-12" }
+      { label: "Lactobacillus rhamnosus", species: "Lactobacillus rhamnosus", strain: "" },
+      { label: "Lactobacillus reuteri", species: "Lactobacillus reuteri", strain: "" },
+      { label: "Lactobacillus fermentum", species: "Lactobacillus fermentum", strain: "" }
     ]
   },
   "RENW": {
     fullTitle: "Renew Life Ultimate Flora Probiotic Women's Once Daily 65 Billion CFU",
     bsl: "BLS 1 Bacteria",
     organisms: [
-      { label: "Lactobacillus rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
-      { label: "Lactobacillus crispatus UF-88", species: "Lactobacillus crispatus", strain: "UF-88" },
+      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium lactis", strain: "UF-12" },
+      { label: "Bifidobacterium lactis UF-IM04", species: "Bifidobacterium lactis", strain: "UF-IM04" },
+      { label: "Bifidobacterium lactis UF-DG19", species: "Bifidobacterium lactis", strain: "UF-DG19" },
+      { label: "Bifidobacterium lactis UF-07", species: "Bifidobacterium lactis", strain: "UF-07" },
+      { label: "Bifidobacterium lactis UF-26", species: "Bifidobacterium lactis", strain: "UF-26" },
+      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
+      { label: "Bifidobacterium breve UF-3", species: "Bifidobacterium breve", strain: "UF-3" },
+      { label: "Bifidobacterium bifidum UF-910", species: "Bifidobacterium bifidum", strain: "UF-910" },
+      { label: "Lactobacillus plantarum UF-217", species: "Lactobacillus plantarum", strain: "UF-217" },
+      { label: "Lactobacillus plantarum UF-987", species: "Lactobacillus plantarum", strain: "UF-987" },
+      { label: "Lactobacillus acidophilus UF-BV14", species: "Lactobacillus acidophilus", strain: "UF-BV14" },
+      { label: "Lactobacillus acidophilus UF-01", species: "Lactobacillus acidophilus", strain: "UF-01" },
+      { label: "Lactobacillus acidophilus UF-5", species: "Lactobacillus acidophilus", strain: "UF-5" },
+      { label: "Lactobacillus rhamnosus UF-BV11", species: "Lactobacillus rhamnosus", strain: "UF-BV11" },
+      { label: "Lactobacillus rhamnosus GG", species: "Lactobacillus rhamnosus", strain: "GG" },
+      { label: "Lactobacillus reuteri UF-14", species: "Lactobacillus reuteri", strain: "UF-14" },
+      { label: "Lactobacillus fermentum UF-120", species: "Lactobacillus fermentum", strain: "UF-120" },
       { label: "Lactobacillus jensenii UF-522", species: "Lactobacillus jensenii", strain: "UF-522" },
-      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium animalis subsp. lactis", strain: "UF-12" }
+      { label: "Lactobacillus gasseri UF-2055", species: "Lactobacillus gasseri", strain: "UF-2055" },
+      { label: "Lactobacillus paracasei UF-19", species: "Lactobacillus paracasei", strain: "UF-19" },
+      { label: "Lactobacillus casei UF-431", species: "Lactobacillus casei", strain: "UF-431" },
+      { label: "Lactobacillus crispatus UF-88", species: "Lactobacillus crispatus", strain: "UF-88" },
+      { label: "Lactobacillus brevis UF-35", species: "Lactobacillus brevis", strain: "UF-35" },
+      { label: "Lactobacillus salivarius UF-862", species: "Lactobacillus salivarius", strain: "UF-862" },
+      { label: "Streptococcus thermophilus UF-336", species: "Streptococcus thermophilus", strain: "UF-336" },
+      { label: "Lactobacillus bulgaricus UF-165", species: "Lactobacillus bulgaricus", strain: "UF-165" }
+    ]
+  },
+  "RENM": {
+    fullTitle: "Renew Life Ultimate Flora Probiotic Mens's Once Daily 65 Billion CFU",
+    bsl: "BLS 1 Bacteria",
+    organisms: [
+      { label: "Lactobacillus plantarum UF-217", species: "Lactobacillus plantarum", strain: "UF-217" },
+      { label: "Lactobacillus acidophilus UF-01", species: "Lactobacillus acidophilus", strain: "UF-01" },
+      { label: "Lactobacillus plantarum UF-987", species: "Lactobacillus plantarum", strain: "UF-987" },
+      { label: "Lactococcus lactis UF-23", species: "Lactococcus lactis", strain: "UF-23" },
+      { label: "Lactobacillus fermentum UF-120", species: "Lactobacillus fermentum", strain: "UF-120" },
+      { label: "Lactobacillus rhamnosus GG", species: "Lactobacillus rhamnosus", strain: "GG" },
+      { label: "Lactobacillus fermentum UF-226", species: "Lactobacillus fermentum", strain: "UF-226" },
+      { label: "Lactobacillus rhamnosus UF-11", species: "Lactobacillus rhamnosus", strain: "UF-11" },
+      { label: "Lactobacillus acidophilus UF-5", species: "Lactobacillus acidophilus", strain: "UF-5" },
+      { label: "Lactobacillus casei UF-431", species: "Lactobacillus casei", strain: "UF-431" },
+      { label: "Lactobacillus gasseri UF-2055", species: "Lactobacillus gasseri", strain: "UF-2055" },
+      { label: "Lactobacillus reuteri UF-14", species: "Lactobacillus reuteri", strain: "UF-14" },
+      { label: "Lactobacillus plantarum UF-115", species: "Lactobacillus plantarum", strain: "UF-115" },
+      { label: "Lactobacillus casei UF-121", species: "Lactobacillus casei", strain: "UF-121" },
+      { label: "Lactobacillus brevis UF-35", species: "Lactobacillus brevis", strain: "UF-35" },
+      { label: "Lactobacillus helveticus UF-142", species: "Lactobacillus helveticus", strain: "UF-142" },
+      { label: "Lactobacillus salivarius UF-862", species: "Lactobacillus salivarius", strain: "UF-862" },
+      { label: "Streptococcus thermophilus UF-336", species: "Streptococcus thermophilus", strain: "UF-336" },
+      { label: "Lactobacillus bulgaricus UF-563", species: "Lactobacillus bulgaricus", strain: "UF-563" },
+      { label: "Lactobacillus bulgaricus UF-165", species: "Lactobacillus bulgaricus", strain: "UF-165" },
+      { label: "Bifidobacterium lactis UF-12", species: "Bifidobacterium lactis", strain: "UF-12" },
+      { label: "Bifidobacterium lactis UF-IM04", species: "Bifidobacterium lactis", strain: "UF-IM04" },
+      { label: "Bifidobacterium lactis UF-DG19", species: "Bifidobacterium lactis", strain: "UF-DG19" },
+      { label: "Bifidobacterium lactis UF-07", species: "Bifidobacterium lactis", strain: "UF-07" },
+      { label: "Bifidobacterium lactis UF-26", species: "Bifidobacterium lactis", strain: "UF-26" },
+      { label: "Bifidobacterium bifidum UF-910", species: "Bifidobacterium bifidum", strain: "UF-910" },
+      { label: "Bifidobacterium breve UF-3", species: "Bifidobacterium breve", strain: "UF-3" },
+      { label: "Bifidobacterium infantis UF-019", species: "Bifidobacterium infantis", strain: "UF-019" },
+      { label: "Bifidobacterium longum UF-536", species: "Bifidobacterium longum", strain: "UF-536" },
+      { label: "Bifidobacterium lactis UF-50", species: "Bifidobacterium lactis", strain: "UF-50" },
+      { label: "Lactobacillus paracasei UF-19", species: "Lactobacillus paracasei", strain: "UF-19" }
     ]
   },
   "TODD": {
@@ -216,51 +407,21 @@ const catalog = {
       { label: "Bifidobacterium longum HA-116", species: "Bifidobacterium longum", strain: "HA-116" },
       { label: "Lacticaseibacillus rhamnosus HA-111", species: "Lacticaseibacillus rhamnosus", strain: "HA-111" },
       { label: "Lacticaseibacillus paracasei HA-108", species: "Lacticaseibacillus paracasei", strain: "HA-108" },
-      { label: "Lactobacillus acidophilus Rosell-418", species: "Lactobacillus acidophilus", strain: "Rosell-418" },
+      { label: "Lactobacillus acidophilus Rosell®-418", species: "Lactobacillus acidophilus", strain: "Rosell®-418" },
       { label: "Bifidobacterium bifidum HA-132", species: "Bifidobacterium bifidum", strain: "HA-132" },
       { label: "Bifidobacterium breve HA-129", species: "Bifidobacterium breve", strain: "HA-129" }
-    ]
-  },
-  "UPNO": {
-    fullTitle: "Upnourish Probiotics 200 Billion CFU",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Bifidobacterium longum CCFM760", species: "Bifidobacterium longum", strain: "CCFM760" },
-      { label: "Bifidobacterium animalis BA051", species: "Bifidobacterium animalis", strain: "BA051" },
-      { label: "Lactobacillus rhamnosus LR663", species: "Lacticaseibacillus rhamnosus", strain: "LR663" },
-      { label: "Lactobacillus acidophilus L59", species: "Lactobacillus acidophilus", strain: "L59" },
-      { label: "Bifidobacterium lactis BL03", species: "Bifidobacterium lactis", strain: "BL03" },
-      { label: "Lactobacillus plantarum CCFM8727", species: "Lactiplantibacillus plantarum", strain: "CCFM8727" }
-    ]
-  },
-  "WFMK": {
-    fullTitle: "356 Whole Foods Market Adult 50+ Probiotic 5 Billion CFU",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Lactobacillus acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
-      { label: "Lactobacillus plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
-      { label: "Bifidobacterium bifidum Bb-06", species: "Bifidobacterium bifidum", strain: "Bb-06" },
-      { label: "Bifidobacterium longum Bl-05", species: "Bifidobacterium longum", strain: "Bl-05" },
-      { label: "Bifidobacterium lactis BL-04", species: "Bifidobacterium animalis subsp. lactis", strain: "BL-04" }
-    ]
-  },
-  "ZEBO": {
-    fullTitle: "Zebora 3-in-1 Probiotics 100 Billion Organisms",
-    bsl: "BLS 1 Bacteria",
-    organisms: [
-      { label: "Lactiplantibacillus plantarum", species: "Lactiplantibacillus plantarum", strain: "" },
-      { label: "Lactobacillus acidophilus", species: "Lactobacillus acidophilus", strain: "" },
-      { label: "Bifidobacterium longum", species: "Bifidobacterium longum", strain: "" },
-      { label: "Lacticaseibacillus rhamnosus", species: "Lacticaseibacillus rhamnosus", strain: "" },
-      { label: "Bifidobacterium lactis", species: "Bifidobacterium lactis", strain: "" },
-      { label: "Bacillus coagulans", species: "Bacillus coagulans", strain: "" }
     ]
   }
 };
 
 let currentCode = "JARR";
 let selectedIdx = 0;
-const cache = {};
+const recordCache = {};
+const fastaCache = {};
+
+function cleanStrain(str) {
+  return (str || "").replace(/[®™]/g, "").trim();
+}
 
 function initSelect() {
   const sel = document.getElementById("product-select");
@@ -276,7 +437,7 @@ function initSelect() {
     currentCode = sel.value;
     selectedIdx = 0;
     renderAll();
-    queryDetails(0);
+    load16SRecords(0);
   });
 }
 
@@ -287,7 +448,7 @@ function renderList() {
     const isSelected = i === selectedIdx;
     return `
       <li>
-        <button type="button" class="org-btn ${isSelected ? "active" : ""}" aria-pressed="${isSelected}" onclick="queryDetails(${i})">
+        <button type="button" class="org-btn ${isSelected ? "active" : ""}" aria-pressed="${isSelected}" onclick="load16SRecords(${i})">
           <span>${org.label}</span>
           <span class="strain-tag">${org.strain || "Species only"}</span>
         </button>
@@ -304,140 +465,181 @@ function renderAll() {
   renderList();
 }
 
-function build16sLinks(org) {
-  const isFungal = /^Saccharomyces/i.test(org.species);
-  const nucTerm = org.strain
-    ? `"${org.species}"[Organism] AND "${org.strain}" AND "16S ribosomal RNA"`
-    : `"${org.species}"[Organism] AND "16S ribosomal RNA"`;
-  const nucSearchUrl = "https://www.ncbi.nlm.nih.gov/nuccore/?term=" + encodeURIComponent(nucTerm);
-  const blastUrl = "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&DATABASE=16S_ribosomal_RNA";
-  return { isFungal, nucTerm, nucSearchUrl, blastUrl };
+async function fetchNuccore16S(term) {
+  const url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=" + encodeURIComponent(term) + "&retmode=json&retmax=4";
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error("Search failed");
+  const json = await resp.json();
+  const count = parseInt(json.esearchresult.count, 10) || 0;
+  const ids = json.esearchresult.idlist || [];
+  if (ids.length === 0) return { count, records: [] };
+
+  const sumUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nuccore&id=" + ids.join(",") + "&retmode=json";
+  const sumResp = await fetch(sumUrl);
+  if (!sumResp.ok) throw new Error("Summary failed");
+  const sumJson = await sumResp.json();
+
+  const records = ids.map(id => {
+    const item = (sumJson.result && sumJson.result[id]) || {};
+    return {
+      uid: id,
+      accession: item.accessionversion || item.caption || id,
+      title: item.title || "16S ribosomal RNA sequence",
+      length: item.slen ? item.slen + " bp" : "Length unlisted"
+    };
+  });
+  return { count, records };
 }
 
-async function queryDetails(idx) {
+async function toggleFasta(uid, accession, boxId, btnEl) {
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  if (box.style.display === "block") {
+    box.style.display = "none";
+    btnEl.textContent = "Show FASTA";
+    return;
+  }
+  box.style.display = "block";
+  if (fastaCache[uid]) {
+    box.textContent = fastaCache[uid];
+    btnEl.textContent = "Hide FASTA";
+    return;
+  }
+  box.textContent = "Loading FASTA sequence...";
+  try {
+    const fastaUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" + encodeURIComponent(uid) + "&rettype=fasta&retmode=text";
+    const resp = await fetch(fastaUrl);
+    if (!resp.ok) throw new Error("FASTA fetch failed");
+    const text = (await resp.text()).trim();
+    fastaCache[uid] = text || ("No FASTA returned for " + accession);
+    box.textContent = fastaCache[uid];
+    btnEl.textContent = "Hide FASTA";
+  } catch (e) {
+    box.textContent = "Could not load FASTA inline for " + accession + ".";
+  }
+}
+
+function copyFasta(uid, accession, boxId, statusId) {
+  const statusEl = document.getElementById(statusId);
+  const runCopy = async () => {
+    let text = fastaCache[uid];
+    if (!text) {
+      const fastaUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" + encodeURIComponent(uid) + "&rettype=fasta&retmode=text";
+      const resp = await fetch(fastaUrl);
+      text = (await resp.text()).trim();
+      fastaCache[uid] = text;
+    }
+    const box = document.getElementById(boxId);
+    if (box) {
+      box.style.display = "block";
+      box.textContent = text;
+    }
+    await navigator.clipboard.writeText(text);
+    if (statusEl) statusEl.textContent = "Copied FASTA (" + accession + ")";
+  };
+  runCopy().catch(() => {
+    if (statusEl) statusEl.textContent = "Select FASTA text above to copy";
+  });
+}
+
+async function load16SRecords(idx) {
   selectedIdx = idx;
   renderList();
 
   const org = catalog[currentCode].organisms[idx];
   const panel = document.getElementById("detail-panel");
-  const pubmedTerm = org.strain
-    ? '"' + org.species + '" AND "' + org.strain + '"'
-    : '"' + org.species + '" AND probiotic';
-  const pubmedSearchUrl = "https://pubmed.ncbi.nlm.nih.gov/?term=" + encodeURIComponent(pubmedTerm);
-  const links16s = build16sLinks(org);
-  const cacheKey = org.species + "|" + org.strain;
+  const blastUrl = "https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&DATABASE=16S_ribosomal_RNA";
+  const isFungal = /^Saccharomyces/i.test(org.species);
 
-  if (cache[cacheKey]) {
-    panel.innerHTML = cache[cacheKey];
+  if (isFungal) {
+    panel.innerHTML = `
+      <div class="detail-header">
+        <h3>${org.label}</h3>
+        <span class="count-pill">Fungal / Non-16S</span>
+      </div>
+      <div class="note-box">
+        <strong>Note on 16S rRNA:</strong> <em>${org.species}</em> is a yeast (fungi do not encode prokaryotic 16S rRNA; fungal identification typically uses ITS or 28S rRNA).
+      </div>
+      <a class="ext-link" href="${blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST ↗</a>
+    `;
     return;
   }
 
+  const cleanStr = cleanStrain(org.strain);
+  const cacheKey = org.species + "|" + cleanStr;
+  const strainTerm = cleanStr
+    ? `"${org.species}"[Organism] AND "${cleanStr}" AND ("16S ribosomal RNA" OR "16S rRNA")`
+    : "";
+  const speciesTerm = `"${org.species}"[Organism] AND ("16S ribosomal RNA" OR "16S rRNA")`;
+
   panel.innerHTML = `
-    <div class="pubmed-header">
+    <div class="detail-header">
       <h3>${org.label}</h3>
-      <span class="count-pill">Searching...</span>
+      <span class="count-pill">Loading 16S...</span>
     </div>
-    <p style="font-size:12px; color:#555;">Querying NIH PubMed & NCBI 16S rRNA records...</p>
+    <p style="font-size:12px; color:#555;">Fetching 16S rRNA sequence records from NCBI Nucleotide...</p>
   `;
 
   try {
-    const pubmedSearchApi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + encodeURIComponent(pubmedTerm) + "&retmode=json&retmax=3&sort=relevance";
-    const pubmedResp = await fetch(pubmedSearchApi);
-    const pubmedJson = await pubmedResp.json();
-
-    const totalCount = parseInt(pubmedJson.esearchresult.count, 10) || 0;
-    const pmids = pubmedJson.esearchresult.idlist || [];
-
-    let papersHtml = "";
-    if (pmids.length === 0) {
-      papersHtml = `<p style="font-size:12px; color:#555;">No exact PubMed matches found for this query.</p>`;
-    } else {
-      const summaryUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=" + pmids.join(",") + "&retmode=json";
-      const summaryResp = await fetch(summaryUrl);
-      const summaryJson = await summaryResp.json();
-
-      const items = pmids.map(id => {
-        const art = summaryJson.result[id];
-        const firstAuthor = art.authors && art.authors.length > 0 ? art.authors[0].name + " et al." : "Author unlisted";
-        const year = art.pubdate ? art.pubdate.slice(0, 4) : "";
-        return `
-          <li>
-            <a class="paper-title" href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank" rel="noopener">${art.title}</a>
-            <div class="paper-meta">${firstAuthor} · <em>${art.source}</em> (${year}) · PMID: ${id}</div>
-          </li>`;
-      }).join("");
-
-      papersHtml = `<ul class="paper-list">${items}</ul>`;
-    }
-
-    let seqHtml = "";
-    if (links16s.isFungal) {
-      seqHtml = `
-        <p style="font-size:12px; color:#555; margin:4px 0;"><em>${org.species}</em> is a yeast (fungi use ITS/28S rRNA rather than prokaryotic 16S rRNA).</p>
-        <a class="ext-link" href="${links16s.blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST ↗</a>
-      `;
-    } else {
-      let nucHitsHtml = "";
-      try {
-        const nucApi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=" + encodeURIComponent(links16s.nucTerm) + "&retmode=json&retmax=3";
-        const nucResp = await fetch(nucApi);
-        const nucJson = await nucResp.json();
-        const nucIds = nucJson.esearchresult.idlist || [];
-
-        if (nucIds.length > 0) {
-          const nucSumApi = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nuccore&id=" + nucIds.join(",") + "&retmode=json";
-          const nucSumResp = await fetch(nucSumApi);
-          const nucSumJson = await nucSumResp.json();
-
-          nucHitsHtml = `<ul class="paper-list">` + nucIds.map(id => {
-            const rec = nucSumJson.result[id] || {};
-            const acc = rec.accessionversion || rec.caption || id;
-            const title = rec.title || ("16S ribosomal RNA record (" + acc + ")");
-            return `
-              <li>
-                <a class="paper-title" href="https://www.ncbi.nlm.nih.gov/nuccore/${encodeURIComponent(acc)}" target="_blank" rel="noopener">${title}</a>
-                <div class="paper-meta">Accession: ${acc}</div>
-              </li>`;
-          }).join("") + `</ul>`;
-        } else {
-          const fallbackTerm = `"${org.species}"[Organism] AND "16S ribosomal RNA"`;
-          nucHitsHtml = `<p style="font-size:12px; color:#555; margin:4px 0;">No strain-specific 16S record returned; try <a class="paper-title" style="display:inline;" href="https://www.ncbi.nlm.nih.gov/nuccore/?term=${encodeURIComponent(fallbackTerm)}" target="_blank" rel="noopener">species-level 16S search on NCBI Nucleotide ↗</a>.</p>`;
+    let data = recordCache[cacheKey];
+    if (!data) {
+      let result = null;
+      let scope = "Species";
+      if (strainTerm) {
+        const strainRes = await fetchNuccore16S(strainTerm);
+        if (strainRes.records.length > 0) {
+          result = strainRes;
+          scope = "Strain-matched (" + cleanStr + ")";
         }
-      } catch (e) {
-        nucHitsHtml = `<p style="font-size:12px; color:#555; margin:4px 0;">Use the links below to browse 16S rRNA records and run BLAST.</p>`;
       }
-
-      seqHtml = `
-        ${nucHitsHtml}
-        <a class="ext-link" href="${links16s.nucSearchUrl}" target="_blank" rel="noopener">NCBI Nucleotide 16S Search ↗</a>
-        <a class="ext-link" href="${links16s.blastUrl}" target="_blank" rel="noopener">NCBI BLAST (16S rRNA DB) ↗</a>
-      `;
+      if (!result) {
+        result = await fetchNuccore16S(speciesTerm);
+        scope = cleanStr ? "Species fallback (no exact strain 16S hit)" : "Species-level";
+      }
+      data = { scope, count: result.count, records: result.records, searchTerm: cleanStr && scope.startsWith("Strain") ? strainTerm : speciesTerm };
+      recordCache[cacheKey] = data;
     }
 
-    const rendered = `
-      <div class="pubmed-header">
+    const nucSearchUrl = "https://www.ncbi.nlm.nih.gov/nuccore/?term=" + encodeURIComponent(data.searchTerm);
+    const cardsHtml = data.records.length === 0
+      ? `<p style="font-size:12px; color:#555;">No 16S rRNA nucleotide records found for this query.</p>`
+      : data.records.map((rec, rIdx) => {
+          const boxId = `fasta-box-${idx}-${rIdx}`;
+          const statusId = `copy-status-${idx}-${rIdx}`;
+          const genbankUrl = `https://www.ncbi.nlm.nih.gov/nuccore/${encodeURIComponent(rec.accession)}`;
+          return `
+            <div class="rec-card">
+              <div class="rec-title">${rec.title}</div>
+              <div class="rec-meta"><strong>Accession:</strong> ${rec.accession} · <strong>Length:</strong> ${rec.length}</div>
+              <div class="action-row">
+                <button type="button" class="mini-btn" onclick="toggleFasta('${rec.uid}', '${rec.accession}', '${boxId}', this)">Show FASTA</button>
+                <button type="button" class="mini-btn" onclick="copyFasta('${rec.uid}', '${rec.accession}', '${boxId}', '${statusId}')">Copy FASTA</button>
+                <a class="ext-link" href="${genbankUrl}" target="_blank" rel="noopener">GenBank Record ↗</a>
+                <span id="${statusId}" style="font-size:11px; color:#137356; font-weight:600;"></span>
+              </div>
+              <div id="${boxId}" class="fasta-box" style="display:none;"></div>
+            </div>`;
+        }).join("");
+
+    panel.innerHTML = `
+      <div class="detail-header">
         <h3>${org.label}</h3>
-        <span class="count-pill">${totalCount} PubMed ${totalCount === 1 ? "Study" : "Studies"}</span>
+        <span class="count-pill">${data.count} 16S ${data.count === 1 ? "Record" : "Records"}</span>
       </div>
-      <div class="meta-line"><strong>Species:</strong> <em>${org.species}</em> · <strong>Strain:</strong> ${org.strain || "Not listed on label"}</div>
-      ${papersHtml}
-      <a class="ext-link" href="${pubmedSearchUrl}" target="_blank" rel="noopener">View all ${totalCount} results on NIH PubMed ↗</a>
-      <div class="sec-box">
-        <div class="sec-title">16S rRNA Sequence & BLAST</div>
-        ${seqHtml}
+      <div class="meta-line"><strong>Species:</strong> <em>${org.species}</em> · <strong>Strain:</strong> ${org.strain || "Not listed"} · <strong>Match:</strong> ${data.scope}</div>
+      ${cardsHtml}
+      <div class="action-row" style="margin-top:8px;">
+        <a class="ext-link" href="${nucSearchUrl}" target="_blank" rel="noopener">Browse All 16S on NCBI Nucleotide ↗</a>
+        <a class="ext-link" href="${blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST (16S rRNA DB) ↗</a>
       </div>
     `;
-
-    cache[cacheKey] = rendered;
-    panel.innerHTML = rendered;
   } catch (err) {
     panel.innerHTML = `
-      <div class="pubmed-header"><h3>${org.label}</h3></div>
-      <p style="font-size:12px; color:#b54700;">Could not load PubMed API data. <a href="${pubmedSearchUrl}" target="_blank" rel="noopener">Open search on PubMed ↗</a></p>
-      <div class="sec-box">
-        <div class="sec-title">16S rRNA Sequence & BLAST</div>
-        <a class="ext-link" href="${links16s.nucSearchUrl}" target="_blank" rel="noopener">NCBI Nucleotide 16S Search ↗</a>
-        <a class="ext-link" href="${links16s.blastUrl}" target="_blank" rel="noopener">NCBI BLAST (16S rRNA DB) ↗</a>
+      <div class="detail-header"><h3>${org.label}</h3></div>
+      <div class="note-box">Could not load 16S records directly inside the frame.</div>
+      <div class="action-row">
+        <a class="ext-link" href="https://www.ncbi.nlm.nih.gov/nuccore/?term=${encodeURIComponent(speciesTerm)}" target="_blank" rel="noopener">Search 16S on NCBI Nucleotide ↗</a>
+        <a class="ext-link" href="${blastUrl}" target="_blank" rel="noopener">Open NCBI BLAST (16S rRNA DB) ↗</a>
       </div>
     `;
   }
@@ -445,7 +647,7 @@ async function queryDetails(idx) {
 
 initSelect();
 renderAll();
-queryDetails(0);
+load16SRecords(0);
 </script>
 </body>
 </html>
