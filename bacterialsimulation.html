@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Bacterial Community Growth and Competition Simulation</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; margin: 12px; color: #222; background: #fafafa; }
   .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; }
@@ -15,37 +16,42 @@
 </head>
 <body>
 
-<div class="controls">
-  <div class="control-group">
-    <label>Species A Growth (r₁): <span id="r1-val">0.8</span></label>
-    <input type="range" id="r1" min="0.1" max="1.5" step="0.1" value="0.8">
+<main>
+  <div class="controls" role="group" aria-label="Simulation Parameters">
+    <div class="control-group">
+      <label for="r1">Species A Growth (r₁): <span id="r1-val">0.8</span></label>
+      <input type="range" id="r1" min="0.1" max="1.5" step="0.1" value="0.8">
+    </div>
+    <div class="control-group">
+      <label for="r2">Species B Growth (r₂): <span id="r2-val">0.6</span></label>
+      <input type="range" id="r2" min="0.1" max="1.5" step="0.1" value="0.6">
+    </div>
+    <div class="control-group">
+      <label for="a12">B's Effect on A (α₁₂): <span id="a12-val">0.5</span></label>
+      <input type="range" id="a12" min="0.0" max="2.0" step="0.1" value="0.5">
+    </div>
+    <div class="control-group">
+      <label for="a21">A's Effect on B (α₂₁): <span id="a21-val">0.8</span></label>
+      <input type="range" id="a21" min="0.0" max="2.0" step="0.1" value="0.8">
+    </div>
   </div>
-  <div class="control-group">
-    <label>Species B Growth (r₂): <span id="r2-val">0.6</span></label>
-    <input type="range" id="r2" min="0.1" max="1.5" step="0.1" value="0.6">
-  </div>
-  <div class="control-group">
-    <label>B's Effect on A (α₁₂): <span id="a12-val">0.5</span></label>
-    <input type="range" id="a12" min="0.0" max="2.0" step="0.1" value="0.5">
-  </div>
-  <div class="control-group">
-    <label>A's Effect on B (α₂₁): <span id="a21-val">0.8</span></label>
-    <input type="range" id="a21" min="0.0" max="2.0" step="0.1" value="0.8">
-  </div>
-</div>
 
-<div class="readout">
-  <span style="color:#1b9e77;">Species A (t = 10h): <span id="endA">0</span> × 10⁶ CFU/mL</span>
-  <span style="color:#d95f02;">Species B (t = 10h): <span id="endB">0</span> × 10⁶ CFU/mL</span>
-</div>
+  <div class="readout" aria-live="polite" aria-atomic="true">
+    <span style="color:#137356;">Species A (t = 10h): <span id="endA">0</span> × 10⁶ CFU/mL</span>
+    <span style="color:#b54700;">Species B (t = 10h): <span id="endB">0</span> × 10⁶ CFU/mL</span>
+  </div>
 
-<svg id="chart" viewBox="0 0 600 260"></svg>
+  <svg id="chart" viewBox="0 0 600 260" role="img" aria-labelledby="chartTitle chartDesc">
+    <title id="chartTitle">Lotka-Volterra Bacterial Co-Culture Growth Curves</title>
+    <desc id="chartDesc">Line graph plotting Species A and Species B population densities over 10 hours relative to carrying capacity K equals 500.</desc>
+  </svg>
 
-<div class="legend">
-  <span><span class="dot" style="background:#1b9e77;"></span>Species A</span>
-  <span><span class="dot" style="background:#d95f02;"></span>Species B</span>
-  <span><span class="dot" style="background:#888;"></span>Carrying Capacity (K = 500)</span>
-</div>
+  <div class="legend" aria-hidden="true">
+    <span><span class="dot" style="background:#137356;"></span>Species A (solid line)</span>
+    <span><span class="dot" style="background:#b54700;"></span>Species B (dashed line)</span>
+    <span><span class="dot" style="background:#666;"></span>Carrying Capacity (K = 500)</span>
+  </div>
+</main>
 
 <script>
 const K = 500, steps = 50, dt = 0.2;
@@ -69,8 +75,10 @@ function update() {
     n2 = Math.max(0, n2 + dn2 * dt);
   }
 
-  document.getElementById('endA').textContent = pts1[steps - 1].y.toFixed(1);
-  document.getElementById('endB').textContent = pts2[steps - 1].y.toFixed(1);
+  const endA = pts1[steps - 1].y.toFixed(1);
+  const endB = pts2[steps - 1].y.toFixed(1);
+  document.getElementById('endA').textContent = endA;
+  document.getElementById('endB').textContent = endB;
 
   const padL = 45, padR = 15, padT = 15, padB = 30;
   const w = 600 - padL - padR, h = 260 - padT - padB;
@@ -84,14 +92,16 @@ function update() {
   const kY = toY(K).toFixed(1);
 
   document.getElementById('chart').innerHTML = `
-    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+h}" stroke="#999"/>
-    <line x1="${padL}" y1="${padT+h}" x2="${padL+w}" y2="${padT+h}" stroke="#999"/>
-    <line x1="${padL}" y1="${kY}" x2="${padL+w}" y2="${kY}" stroke="#888" stroke-dasharray="5,5"/>
-    <text x="${padL-6}" y="${kY}" font-size="11" text-anchor="end" fill="#555">500</text>
-    <text x="${padL-6}" y="${padT+h}" font-size="11" text-anchor="end" fill="#555">0</text>
-    <text x="${padL+w/2}" y="252" font-size="12" text-anchor="middle" fill="#333">Time (hours)</text>
-    <path d="${path1}" fill="none" stroke="#1b9e77" stroke-width="3"/>
-    <path d="${path2}" fill="none" stroke="#d95f02" stroke-width="3" stroke-dasharray="6,3"/>
+    <title id="chartTitle">Lotka-Volterra Bacterial Co-Culture Growth Curves</title>
+    <desc id="chartDesc">At 10 hours, Species A reaches ${endA} and Species B reaches ${endB} million CFU per mL.</desc>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+h}" stroke="#767676"/>
+    <line x1="${padL}" y1="${padT+h}" x2="${padL+w}" y2="${padT+h}" stroke="#767676"/>
+    <line x1="${padL}" y1="${kY}" x2="${padL+w}" y2="${kY}" stroke="#666" stroke-dasharray="5,5"/>
+    <text x="${padL-6}" y="${kY}" font-size="11" text-anchor="end" fill="#444">500</text>
+    <text x="${padL-6}" y="${padT+h}" font-size="11" text-anchor="end" fill="#444">0</text>
+    <text x="${padL+w/2}" y="252" font-size="12" text-anchor="middle" fill="#222">Time (hours)</text>
+    <path d="${path1}" fill="none" stroke="#137356" stroke-width="3"/>
+    <path d="${path2}" fill="none" stroke="#b54700" stroke-width="3" stroke-dasharray="6,3"/>
   `;
 }
 
