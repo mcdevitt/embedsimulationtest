@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assigned Probiotic & Live NIH PubMed Literature Explorer</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 12px; color: #222; background: #fafafa; }
+  .top-bar { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 12px; align-items: center; }
+  @media (max-width: 760px) { .top-bar { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; font-size: 13px; }
+  .field label { font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  select { padding: 6px 8px; border: 1px solid #bbb; border-radius: 4px; font-size: 13px; background: #fff; color: #222; }
+  .brand-banner { background: #eef6f3; border: 1px solid #cce3da; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+  .layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; align-items: start; }
+  @media (max-width: 740px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 12px; }
+  .panel-header { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: #222; display: flex; justify-content: space-between; }
+  .bar-row { display: flex; align-items: center; padding: 5px 6px; border-radius: 4px; cursor: pointer; font-size: 12px; border: 1px solid transparent; margin-bottom: 2px; }
+  .bar-row:hover, .bar-row:focus { background: #eef6f3; border-color: #137356; outline: none; }
+  .bar-row.active { background: #e3f2ed; border-color: #137356; font-weight: 600; }
+  .strain-name { width: 175px; flex-shrink: 0; }
+  .bar-track { flex-grow: 1; background: #eee; height: 14px; border-radius: 3px; overflow: hidden; margin: 0 8px; }
+  .bar-fill { height: 100%; background: #137356; transition: width 0.15s ease; }
+  .bar-val { width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+  .pubmed-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 8px; gap: 8px; }
+  .pubmed-header h3 { margin: 0; font-size: 15px; color: #137356; }
+  .count-pill { background: #1b4f72; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
+  .meta-line { font-size: 12px; color: #444; margin-bottom: 8px; }
+  .paper-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+  .paper-list li { padding: 7px 0; border-bottom: 1px solid #f0f0f0; }
+  .paper-list li:last-child { border-bottom: none; }
+  .paper-title { font-weight: 600; color: #1b4f72; text-decoration: none; display: block; margin-bottom: 2px; }
+  .paper-title:hover { text-decoration: underline; }
+  .paper-meta { color: #555; font-size: 11px; }
+  .pubmed-link { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 600; color: #137356; text-decoration: none; }
+  .pubmed-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<main>
+  <div class="top-bar" role="group" aria-label="Assigned Probiotic and Sequencing Controls">
+    <div class="field">
+      <label for="product-select">Assigned Probiotic Sample:</label>
+      <select id="product-select"></select>
+    </div>
+    <div class="field">
+      <label for="reads">Sequencing Depth: <span id="reads-val">10,000</span> reads</label>
+      <input type="range" id="reads" min="100" max="20000" step="100" value="10000">
+    </div>
+    <div class="field">
+      <label for="contam">Cross-Contamination: <span id="contam-val">0%</span></label>
+      <input type="range" id="contam" min="0" max="50" step="5" value="0">
+    </div>
+  </div>
+
+  <div class="brand-banner" id="brand-banner" aria-live="polite"></div>
+
+  <div class="layout">
+    <div class="panel" role="region" aria-label="Label Organisms and Simulated Relative Abundance">
+      <div class="panel-header">
+        <span>Label Organisms (Click to query PubMed)</span>
+        <span id="detected-summary" style="color:#137356;"></span>
+      </div>
+      <div id="bars"></div>
+    </div>
+
+    <div class="panel" id="pubmed-panel" aria-live="polite" aria-atomic="true"></div>
+  </div>
+</main>
+
+<script>
+const catalog = {
+  "ASCU": {
+    brand: "Align Probiotic Supplement (24/7 Digestive Support)",
+    manufacturer: "Procter & Gamble / Align",
+    cfu: "1 Billion CFU",
+    organisms: [
+      { label: "B. longum 35624", species: "Bifidobacterium longum", strain: "35624" }
+    ]
+  },
+  "BAKA": {
+    brand: "Align DualBiotic Probiotic + Prebiotic Gummies",
+    manufacturer: "Procter & Gamble / Align",
+    cfu: "500 Million CFU",
+    organisms: [
+      { label: "Bacillus coagulans MTCC 5856", species: "Bacillus coagulans", strain: "MTCC 5856" }
+    ]
+  },
+  "BIOM": {
+    brand: "Biohm Probiotic Supplement",
+    manufacturer: "Biohm Health",
+    cfu: "30 Billion CFU",
+    organisms: [
+      { label: "B. breve", species: "Bifidobacterium breve", strain: "" },
+      { label: "L. acidophilus", species: "Lactobacillus acidophilus", strain: "" },
+      { label: "L. rhamnosus", species: "Lacticaseibacillus rhamnosus", strain: "" },
+      { label: "Saccharomyces boulardii", species: "Saccharomyces boulardii", strain: "" }
+    ]
+  },
+  "GARD": {
+    brand: "Garden of Life Dr. Formulated Probiotics Once Daily Women's",
+    manufacturer: "Garden of Life",
+    cfu: "50 Billion CFU",
+    organisms: [
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
+      { label: "L. paracasei Lpc-37", species: "Lacticaseibacillus paracasei", strain: "Lpc-37" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" },
+      { label: "B. infantis Bi-26", species: "Bifidobacterium longum subsp. infantis", strain: "Bi-26" },
+      { label: "L. gasseri Lg-36", species: "Lactobacillus gasseri", strain: "Lg-36" },
+      { label: "B. lactis HN019", species: "Bifidobacterium animalis subsp. lactis", strain: "HN019" },
+      { label: "L. bulgaricus Lb-87", species: "Lactobacillus delbrueckii subsp. bulgaricus", strain: "Lb-87" },
+      { label: "B. breve Bb-03", species: "Bifidobacterium breve", strain: "Bb-03" },
+      { label: "L. reuteri 1E1", species: "Limosilactobacillus reuteri", strain: "1E1" },
+      { label: "L. casei Lc-11", species: "Lacticaseibacillus casei", strain: "Lc-11" },
+      { label: "L. salivarius Ls-33", species: "Ligilactobacillus salivarius", strain: "Ls-33" }
+    ]
+  },
+  "JARR": {
+    brand: "Jarrow Formulas Jarro-Dophilus EPS Advanced",
+    manufacturer: "Jarrow Formulas",
+    cfu: "55 Billion CFU",
+    organisms: [
+      { label: "P. acidilactici R1001", species: "Pediococcus acidilactici", strain: "R1001" },
+      { label: "L. paracasei HA-196", species: "Lacticaseibacillus paracasei", strain: "HA-196" },
+      { label: "L. rhamnosus R0011", species: "Lacticaseibacillus rhamnosus", strain: "R0011" },
+      { label: "L. helveticus R0052", species: "Lactobacillus helveticus", strain: "R0052" },
+      { label: "B. longum BB536", species: "Bifidobacterium longum", strain: "BB536" },
+      { label: "L. paracasei R0215", species: "Lacticaseibacillus paracasei", strain: "R0215" },
+      { label: "B. breve R0070", species: "Bifidobacterium breve", strain: "R0070" },
+      { label: "L. plantarum R1012", species: "Lactiplantibacillus plantarum", strain: "R1012" },
+      { label: "L. lactis R1058", species: "Lactococcus lactis", strain: "R1058" },
+      { label: "B. longum R0175", species: "Bifidobacterium longum", strain: "R0175" }
+    ]
+  },
+  "LEAN": {
+    brand: "Align Probiotic Supplement Daily Digestive Support",
+    manufacturer: "Procter & Gamble / Align",
+    cfu: "1 Billion CFU",
+    organisms: [
+      { label: "B. longum 35624", species: "Bifidobacterium longum", strain: "35624" }
+    ]
+  },
+  "NEXA": {
+    brand: "Nexabiotic Ultra-Potency 100B Probiotic",
+    manufacturer: "Nexabiotic",
+    cfu: "100 Billion CFU",
+    organisms: [
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" },
+      { label: "B. lactis HN019", species: "Bifidobacterium animalis subsp. lactis", strain: "HN019" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
+      { label: "L. paracasei Lpc-37", species: "Lacticaseibacillus paracasei", strain: "Lpc-37" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "B. breve Bb-03", species: "Bifidobacterium breve", strain: "Bb-03" },
+      { label: "B. infantis Bi-26", species: "Bifidobacterium longum subsp. infantis", strain: "Bi-26" },
+      { label: "L. salivarius Ls-33", species: "Ligilactobacillus salivarius", strain: "Ls-33" }
+    ]
+  },
+  "PHYS": {
+    brand: "Physician's Choice Probiotics 60 Billion",
+    manufacturer: "Physician's Choice",
+    cfu: "60 Billion CFU",
+    organisms: [
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "B. lactis BL-04", species: "Bifidobacterium animalis subsp. lactis", strain: "BL-04" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
+      { label: "L. paracasei Lpc-37", species: "Lacticaseibacillus paracasei", strain: "Lpc-37" }
+    ]
+  },
+  "REN+": {
+    brand: "Renew Life Ultimate Flora Extra Care Probiotic",
+    manufacturer: "Renew Life",
+    cfu: "50 Billion CFU",
+    organisms: [
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" },
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "B. lactis HN019", species: "Bifidobacterium animalis subsp. lactis", strain: "HN019" },
+      { label: "L. paracasei Lpc-37", species: "Lacticaseibacillus paracasei", strain: "Lpc-37" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
+      { label: "B. longum Bl-05", species: "Bifidobacterium longum", strain: "Bl-05" },
+      { label: "B. breve Bb-03", species: "Bifidobacterium breve", strain: "Bb-03" },
+      { label: "L. casei Lc-11", species: "Lacticaseibacillus casei", strain: "Lc-11" },
+      { label: "L. salivarius Ls-33", species: "Ligilactobacillus salivarius", strain: "Ls-33" }
+    ]
+  },
+  "REND": {
+    brand: "Renew Life Daily Care Probiotic",
+    manufacturer: "Renew Life",
+    cfu: "15 Billion CFU",
+    organisms: [
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" },
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" }
+    ]
+  },
+  "RENM": {
+    brand: "Renew Life Men's Care Probiotic",
+    manufacturer: "Renew Life",
+    cfu: "90 Billion CFU",
+    organisms: [
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" },
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "B. lactis HN019", species: "Bifidobacterium animalis subsp. lactis", strain: "HN019" },
+      { label: "L. paracasei Lpc-37", species: "Lacticaseibacillus paracasei", strain: "Lpc-37" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" }
+    ]
+  },
+  "RENW": {
+    brand: "Renew Life Women's Care Probiotic",
+    manufacturer: "Renew Life",
+    cfu: "25 Billion CFU",
+    organisms: [
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" }
+    ]
+  },
+  "TODD": {
+    brand: "Toddler / Pediatric Probiotic Formula",
+    manufacturer: "Pediatric Probiotic Line",
+    cfu: "See label",
+    organisms: [
+      { label: "B. infantis Bi-26", species: "Bifidobacterium longum subsp. infantis", strain: "Bi-26" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" },
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" }
+    ]
+  },
+  "UPNO": {
+    brand: "Up4 Probiotics",
+    manufacturer: "UP4 / UAS Laboratories",
+    cfu: "See label",
+    organisms: [
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" }
+    ]
+  },
+  "WFMK": {
+    brand: "Whole Foods Market 365 Probiotic",
+    manufacturer: "365 by Whole Foods Market",
+    cfu: "See label",
+    organisms: [
+      { label: "L. acidophilus La-14", species: "Lactobacillus acidophilus", strain: "La-14" },
+      { label: "B. lactis Bi-07", species: "Bifidobacterium animalis subsp. lactis", strain: "Bi-07" },
+      { label: "L. plantarum Lp-115", species: "Lactiplantibacillus plantarum", strain: "Lp-115" },
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" }
+    ]
+  },
+  "ZEBO": {
+    brand: "Culturelle / Digestive Health Probiotic",
+    manufacturer: "Culturelle / i-Health",
+    cfu: "See label",
+    organisms: [
+      { label: "L. rhamnosus GG", species: "Lacticaseibacillus rhamnosus", strain: "GG" }
+    ]
+  }
+};
+
+let currentCode = "JARR";
+let selectedIdx = 0;
+const cache = {};
+
+function seededNoise(seed) {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+}
+
+function initSelect() {
+  const sel = document.getElementById('product-select');
+  Object.keys(catalog).forEach(code => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = `${code} — ${catalog[code].brand}`;
+    if (code === currentCode) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    currentCode = sel.value;
+    selectedIdx = 0;
+    renderAll();
+    queryPubMed(0);
+  });
+}
+
+function getBaseShares(organisms) {
+  const n = organisms.length;
+  // Slightly tapered realistic share weights that sum to 100%
+  const raw = organisms.map((_, idx) => Math.max(4, (n - idx * 0.55)));
+  const sum = raw.reduce((a, b) => a + b, 0);
+  return raw.map(v => (v / sum) * 100);
+}
+
+async function queryPubMed(idx) {
+  selectedIdx = idx;
+  renderBars();
+
+  const orgs = catalog[currentCode].organisms;
+  const org = orgs[idx];
+  const panel = document.getElementById('pubmed-panel');
+
+  const queryTerm = org.strain
+    ? `"${org.species}" AND "${org.strain}"`
+    : `"${org.species}" AND probiotic`;
+  const cacheKey = `${currentCode}|${org.species}|${org.strain}`;
+  const pubmedSearchUrl = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(queryTerm)}`;
+
+  if (cache[cacheKey]) {
+    panel.innerHTML = cache[cacheKey];
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="pubmed-header">
+      <h3>${org.label}</h3>
+      <span class="count-pill">Searching...</span>
+    </div>
+    <p style="font-size:12px; color:#555;">Querying NIH PubMed for <em>${org.species}</em>${org.strain ? ` strain <strong>${org.strain}</strong>` : ''}...</p>
+  `;
+
+  try {
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(queryTerm)}&retmode=json&retmax=3&sort=relevance`;
+    const searchResp = await fetch(searchUrl);
+    const searchJson = await searchResp.json();
+
+    const totalCount = parseInt(searchJson.esearchresult.count, 10) || 0;
+    const pmids = searchJson.esearchresult.idlist || [];
+
+    let papersHtml = '';
+    if (pmids.length === 0) {
+      papersHtml = `<p style="font-size:12px; color:#555;">No exact PubMed matches found for this query. Click below to broaden the search on PubMed.</p>`;
+    } else {
+      const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(',')}&retmode=json`;
+      const summaryResp = await fetch(summaryUrl);
+      const summaryJson = await summaryResp.json();
+
+      const items = pmids.map(id => {
+        const art = summaryJson.result[id];
+        const firstAuthor = art.authors && art.authors.length > 0 ? `${art.authors[0].name} et al.` : 'Author unlisted';
+        const year = art.pubdate ? art.pubdate.slice(0, 4) : '';
+        return `
+          <li>
+            <a class="paper-title" href="https://pubmed.ncbi.nlm.nih.gov/${id}/" target="_blank" rel="noopener">${art.title}</a>
+            <div class="paper-meta">${firstAuthor} · <em>${art.source}</em> (${year}) · PMID: ${id}</div>
+          </li>`;
+      }).join('');
+
+      papersHtml = `<ul class="paper-list">${items}</ul>`;
+    }
+
+    const rendered = `
+      <div class="pubmed-header">
+        <h3>${org.label}</h3>
+        <span class="count-pill">${totalCount} PubMed ${totalCount === 1 ? 'Study' : 'Studies'}</span>
+      </div>
+      <div class="meta-line"><strong>Species:</strong> <em>${org.species}</em> | <strong>Strain:</strong> ${org.strain || 'Not specified on label'}</div>
+      ${papersHtml}
+      <a class="pubmed-link" href="${pubmedSearchUrl}" target="_blank" rel="noopener">View all ${totalCount} results on NIH PubMed ↗</a>
+    `;
+
+    cache[cacheKey] = rendered;
+    panel.innerHTML = rendered;
+  } catch (err) {
+    panel.innerHTML = `
+      <div class="pubmed-header"><h3>${org.label}</h3></div>
+      <p style="font-size:12px; color:#b54700;">Could not load PubMed API data. <a href="${pubmedSearchUrl}" target="_blank" rel="noopener">Open search directly on PubMed ↗</a></p>
+    `;
+  }
+}
+
+function renderBars() {
+  const item = catalog[currentCode];
+  const orgs = item.organisms;
+  const shares = getBaseShares(orgs);
+
+  const reads = parseInt(document.getElementById('reads').value, 10);
+  const contam = parseInt(document.getElementById('contam').value, 10);
+  document.getElementById('reads-val').textContent = reads.toLocaleString();
+  document.getElementById('contam-val').textContent = contam + "%";
+
+  const productFrac = (100 - contam) / 100;
+  let detected = 0;
+
+  const counts = orgs.map((org, idx) => {
+    const exp = (shares[idx] / 100) * productFrac * reads;
+    if (exp < 1.2 && seededNoise(reads + idx + currentCode.charCodeAt(0)) > exp) return 0;
+    const val = Math.round(exp);
+    if (val > 0) detected++;
+    return val;
+  });
+
+  const contamReads = Math.round((contam / 100) * reads);
+  const total = counts.reduce((a, b) => a + b, 0) + contamReads;
+
+  document.getElementById('detected-summary').textContent = `${detected} / ${orgs.length} label taxa detected`;
+
+  let html = orgs.map((org, i) => {
+    const pct = total > 0 ? (counts[i] / total) * 100 : 0;
+    const isSelected = i === selectedIdx;
+    return `
+      <div class="bar-row ${isSelected ? 'active' : ''}" tabindex="0" role="button" aria-pressed="${isSelected}"
+           onclick="queryPubMed(${i})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();queryPubMed(${i});}">
+        <span class="strain-name">${org.label}</span>
+        <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${Math.min(100, pct * 3.5)}%;"></div></div>
+        <span class="bar-val">${pct.toFixed(1)}%</span>
+      </div>`;
+  }).join('');
+
+  if (contam > 0) {
+    const uPct = (contamReads / total) * 100;
+    html += `
+      <div class="bar-row" style="cursor:default;">
+        <span class="strain-name" style="color:#b54700; font-weight:600;">External Contaminant</span>
+        <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:${Math.min(100, uPct * 3.5)}%; background:#b54700;"></div></div>
+        <span class="bar-val" style="color:#b54700; font-weight:600;">${uPct.toFixed(1)}%</span>
+      </div>`;
+  }
+
+  document.getElementById('bars').innerHTML = html;
+}
+
+function renderAll() {
+  const item = catalog[currentCode];
+  document.getElementById('brand-banner').innerHTML = `
+    <div><strong>Code:</strong> ${currentCode} · <strong>Product:</strong> ${item.brand}</div>
+    <div><strong>Manufacturer:</strong> ${item.manufacturer} · <strong>Label Potency:</strong> ${item.cfu}</div>
+  `;
+  renderBars();
+}
+
+['reads', 'contam'].forEach(id => document.getElementById(id).addEventListener('input', renderBars));
+initSelect();
+renderAll();
+queryPubMed(0);
+</script>
+</body>
+</html>
