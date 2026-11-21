@@ -194,7 +194,7 @@
       list-style: none;
       padding: 0;
       margin: 0;
-      max-height: 220px;
+      max-height: 132px;
       overflow-y: auto;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
@@ -1611,8 +1611,8 @@
        * 8. SECTION 3: PUBLISHED SCIENTIFIC STUDIES (PUBMED) + INLINE ABSTRACTS
        * ======================================================================
        */
-      async function queryPubMedTop2(term) {
-        const searchUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + encodeURIComponent(term) + "&retmode=json&retmax=2&sort=relevance";
+      async function queryPubMedTop3(term) {
+        const searchUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + encodeURIComponent(term) + "&retmode=json&retmax=3&sort=relevance";
         const resp = await fetchNcbiResilient(searchUrl);
         const json = await resp.json();
 
@@ -1703,7 +1703,7 @@
         const cleanStr = cleanStrain(org.strain);
         const strainQuery = buildStrainQuery(cleanStr);
         const titleAbsQuery = buildOrganismQuery(org.species, "[Title/Abstract]");
-        const cacheKey = org.species + "|" + cleanStr + "|PUBMED_TIERED";
+        const cacheKey = org.species + "|" + cleanStr + "|PUBMED_TIERED_3";
 
         try {
           let data = pubmedCache[cacheKey];
@@ -1714,7 +1714,7 @@
 
             if (strainQuery) {
               const tier1Term = titleAbsQuery + " AND " + strainQuery + " AND probiotic";
-              const t1 = await queryPubMedTop2(tier1Term);
+              const t1 = await queryPubMedTop3(tier1Term);
               if (t1.totalCount > 0) {
                 res = t1;
                 scopeBadge = "Strain + Probiotic";
@@ -1724,7 +1724,7 @@
 
             if (!res && strainQuery) {
               const tier2Term = titleAbsQuery + " AND " + strainQuery;
-              const t2 = await queryPubMedTop2(tier2Term);
+              const t2 = await queryPubMedTop3(tier2Term);
               if (t2.totalCount > 0) {
                 res = t2;
                 scopeBadge = "Strain Study";
@@ -1734,14 +1734,14 @@
 
             if (!res) {
               const tier3Term = titleAbsQuery + " AND probiotic";
-              res = await queryPubMedTop2(tier3Term);
+              res = await queryPubMedTop3(tier3Term);
               scopeBadge = "Species + Probiotic";
               usedTerm = tier3Term;
             }
 
             if (res.totalCount === 0) {
               const tier4Term = titleAbsQuery;
-              res = await queryPubMedTop2(tier4Term);
+              res = await queryPubMedTop3(tier4Term);
               scopeBadge = "Species Literature";
               usedTerm = tier4Term;
             }
