@@ -190,14 +190,16 @@
       color: var(--accent-green);
     }
 
-    /* Horizontal Wrap / Multi-Column Organism Selector Grid */
+    /* Horizontal Wrap / Multi-Column Organism Selector Grid (caps at ~3 rows before scrolling) */
     .org-list {
       list-style: none;
-      padding: 0;
+      padding: 2px;
       margin: 0;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
       gap: 6px;
+      max-height: 148px;
+      overflow-y: auto;
     }
 
     .org-btn {
@@ -438,36 +440,20 @@
       margin-top: 4px;
     }
 
-    /* Inline DNA Sequence Viewer */
-    .seq-wrapper {
-      margin-top: 8px;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background-color: var(--bg-subtle);
-    }
-
-    .seq-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px 12px;
-      padding: 4px 10px;
-      background-color: #e9eef2;
-      border-bottom: 1px solid var(--border-default);
+    /* Inline DNA Sequence Viewer (flat, single-border box) */
+    .box-label {
       font-size: 12px;
+      font-weight: 700;
       color: var(--text-primary);
-    }
-
-    .seq-toolbar .ext-link {
-      min-height: 32px;
-      font-size: 12px;
+      margin: 6px 0 3px 0;
     }
 
     .seq-box {
       margin: 0;
-      padding: 10px;
+      padding: 8px 10px;
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 12px;
       line-height: 1.45;
@@ -478,32 +464,19 @@
       color: var(--text-primary);
     }
 
-    /* Inline Abstract Viewer */
+    /* Inline Abstract Viewer (flat, single-border box) */
     .abstract-box {
-      margin-top: 10px;
-      padding: 10px 12px;
+      margin-top: 0;
+      padding: 8px 10px;
       background-color: #ffffff;
       border: 1px solid var(--border-default);
       border-radius: var(--radius-sm);
       font-size: 12.5px;
-      line-height: 1.52;
+      line-height: 1.5;
       color: var(--text-primary);
       white-space: pre-line;
-      max-height: 185px;
+      max-height: 125px;
       overflow-y: auto;
-    }
-
-    /* Inline Abstract Viewer */
-    .abstract-box {
-      margin-top: 10px;
-      padding: 10px 12px;
-      background-color: #ffffff;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      font-size: 12.5px;
-      line-height: 1.52;
-      color: var(--text-primary);
-      white-space: pre-line;
     }
 
     /* Warning / Educational Callout */
@@ -563,7 +536,7 @@
           <h2 class="panel-title" id="org-list-heading">Listed Label Organisms</h2>
           <span class="org-count" id="org-count" aria-live="polite"></span>
         </div>
-        <ul class="org-list" id="org-list"></ul>
+        <ul class="org-list" id="org-list" tabindex="0" role="region" aria-label="Listed label organisms"></ul>
       </section>
 
       <!-- Bottom Detail Panel: Organism Header + Split Evidence Columns (1 & 2 Left, 3 Right) -->
@@ -1326,16 +1299,9 @@
         return { count, records };
       }
 
-      function renderDnaViewer(host, fastaText, accession) {
-        const genbankUrl = "https://www.ncbi.nlm.nih.gov/nuccore/" + encodeURIComponent(accession);
+      function renderDnaViewer(host, fastaText) {
         host.innerHTML =
-          '<div class="seq-wrapper">' +
-            '<div class="seq-toolbar">' +
-              "<span><strong>DNA Sequence Preview</strong></span>" +
-              '<a class="ext-link" href="' + genbankUrl + '" target="_blank" rel="noopener">View GenBank Record ↗</a>' +
-            "</div>" +
-            '<pre class="seq-box" tabindex="0" role="region" aria-label="16S DNA sequence text">' + escapeHtml(fastaText) + "</pre>" +
-          "</div>";
+          '<pre class="seq-box" tabindex="0" role="region" aria-label="16S DNA sequence text">' + escapeHtml(fastaText) + "</pre>";
       }
 
       async function autoLoadDnaSequence(uid, accession, slotId, token) {
@@ -1345,18 +1311,12 @@
         const genbankUrl = "https://www.ncbi.nlm.nih.gov/nuccore/" + encodeURIComponent(accession);
 
         if (fastaCache[uid]) {
-          renderDnaViewer(host, fastaCache[uid], accession);
+          renderDnaViewer(host, fastaCache[uid]);
           return;
         }
 
         host.innerHTML =
-          '<div class="seq-wrapper">' +
-            '<div class="seq-toolbar">' +
-              "<span><strong>DNA Sequence Preview</strong></span>" +
-              '<a class="ext-link" href="' + genbankUrl + '" target="_blank" rel="noopener">View GenBank Record ↗</a>' +
-            "</div>" +
-            '<div class="seq-box">Loading DNA sequence for ' + escapeHtml(accession) + "…</div>" +
-          "</div>";
+          '<div class="seq-box">Loading DNA sequence for ' + escapeHtml(accession) + "…</div>";
 
         try {
           const fastaUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=" + encodeURIComponent(uid) + "&rettype=fasta&retmode=text";
@@ -1365,11 +1325,11 @@
           const text = (await resp.text()).trim();
           if (!text) throw new Error("Empty sequence");
           fastaCache[uid] = text;
-          renderDnaViewer(host, text, accession);
+          renderDnaViewer(host, text);
         } catch (err) {
           if (token !== activeToken) return;
           host.innerHTML =
-            '<div class="note-box" style="margin-top:8px;">' +
+            '<div class="note-box" style="margin-top:6px;">' +
               "Could not retrieve DNA sequence inline. " +
               '<a class="ext-link" href="' + genbankUrl + '?report=fasta" target="_blank" rel="noopener">View GenBank Record ↗</a>' +
             "</div>";
@@ -1450,13 +1410,17 @@
             ? '<p class="status-text">No full-length 16S rRNA records matched this filter.</p>'
             : data.records.map((rec, rIdx) => {
                 const slotId = "seq-slot-" + token + "-" + rIdx;
+                const genbankUrl = "https://www.ncbi.nlm.nih.gov/nuccore/" + encodeURIComponent(rec.accession);
                 return (
                   '<article class="rec-card">' +
-                    '<div class="rec-title">' + escapeHtml(rec.title) + "</div>" +
+                    '<div class="rec-title">' +
+                      '<a class="rec-title-link" href="' + genbankUrl + '" target="_blank" rel="noopener">' + escapeHtml(rec.title) + " ↗</a>" +
+                    "</div>" +
                     '<div class="rec-meta" style="margin-bottom:4px;">' +
                       "<strong>GenBank Record ID:</strong> " + escapeHtml(rec.accession) + " &middot; " +
                       "<strong>Length:</strong> " + escapeHtml(rec.length) +
                     "</div>" +
+                    '<div class="box-label">DNA Sequence:</div>' +
                     '<div id="' + slotId + '"></div>' +
                   "</article>"
                 );
@@ -1623,8 +1587,8 @@
        * 8. SECTION 3: PUBLISHED SCIENTIFIC STUDIES (PUBMED) + INLINE ABSTRACTS
        * ======================================================================
        */
-      async function queryPubMedTop3(term) {
-        const searchUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + encodeURIComponent(term) + "&retmode=json&retmax=3&sort=relevance";
+      async function queryPubMedTop2(term) {
+        const searchUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=" + encodeURIComponent(term) + "&retmode=json&retmax=2&sort=relevance";
         const resp = await fetchNcbiResilient(searchUrl);
         const json = await resp.json();
 
@@ -1652,56 +1616,67 @@
         return { totalCount, articles };
       }
 
-      async function toggleAbstract(pmid, slotId, btnEl) {
-        const host = document.getElementById(slotId);
-        if (!host) return;
+      async function autoLoadPubMedAbstracts(articles, token) {
+        if (!articles || articles.length === 0) return;
 
-        const isExpanded = btnEl.getAttribute("aria-expanded") === "true";
-        if (isExpanded) {
-          host.classList.add("hidden");
-          btnEl.setAttribute("aria-expanded", "false");
-          btnEl.textContent = "Show abstract";
-          return;
-        }
+        const missingPmids = [];
+        articles.forEach((art, aIdx) => {
+          const host = document.getElementById("abs-slot-" + token + "-" + aIdx);
+          if (!host) return;
+          if (abstractCache[art.pmid]) {
+            host.innerHTML = '<div class="abstract-box" tabindex="0" role="region" aria-label="Study abstract">' + escapeHtml(abstractCache[art.pmid]) + "</div>";
+          } else {
+            host.innerHTML = '<div class="abstract-box">Loading abstract…</div>';
+            missingPmids.push(art.pmid);
+          }
+        });
 
-        host.classList.remove("hidden");
-        btnEl.setAttribute("aria-expanded", "true");
-        btnEl.textContent = "Hide abstract";
-
-        if (abstractCache[pmid]) {
-          host.innerHTML = '<div class="abstract-box" tabindex="0" role="region" aria-label="Study abstract text">' + escapeHtml(abstractCache[pmid]) + "</div>";
-          return;
-        }
-
-        host.innerHTML = '<div class="abstract-box">Loading abstract from NIH PubMed (PMID: ' + escapeHtml(pmid) + ")…</div>";
+        if (missingPmids.length === 0) return;
 
         try {
-          const xmlUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=" + encodeURIComponent(pmid) + "&retmode=xml";
+          const xmlUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=" + encodeURIComponent(missingPmids.join(",")) + "&retmode=xml";
           const resp = await fetchNcbiResilient(xmlUrl);
+          if (token !== activeToken) return;
+
           const xmlString = await resp.text();
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-          const abstractNodes = Array.from(xmlDoc.querySelectorAll("AbstractText"));
+          const articleNodes = Array.from(xmlDoc.querySelectorAll("PubmedArticle"));
 
-          let parsedText = "";
-          if (abstractNodes.length > 0) {
-            parsedText = abstractNodes.map(node => {
-              const label = node.getAttribute("Label");
-              const body = node.textContent.trim();
-              return label ? (label + ": " + body) : body;
-            }).join("\n\n");
-          } else {
-            parsedText = "No abstract text is indexed in PubMed for this article. Click 'Open on PubMed' to view publisher details.";
-          }
+          articleNodes.forEach(articleNode => {
+            const pmidEl = articleNode.querySelector("MedlineCitation > PMID");
+            if (!pmidEl) return;
+            const pmid = pmidEl.textContent.trim();
+            const abstractNodes = Array.from(articleNode.querySelectorAll("AbstractText"));
 
-          abstractCache[pmid] = parsedText;
-          host.innerHTML = '<div class="abstract-box" tabindex="0" role="region" aria-label="Study abstract text">' + escapeHtml(parsedText) + "</div>";
+            let parsedText = "";
+            if (abstractNodes.length > 0) {
+              parsedText = abstractNodes.map(node => {
+                const label = node.getAttribute("Label");
+                const body = node.textContent.trim();
+                return label ? (label + ": " + body) : body;
+              }).join("\n\n");
+            } else {
+              parsedText = "No abstract text is indexed in PubMed for this article. Click the study title above to view details on PubMed.";
+            }
+            abstractCache[pmid] = parsedText;
+          });
+
+          articles.forEach((art, aIdx) => {
+            const host = document.getElementById("abs-slot-" + token + "-" + aIdx);
+            if (!host) return;
+            const text = abstractCache[art.pmid] || "No abstract text is indexed in PubMed for this article.";
+            host.innerHTML = '<div class="abstract-box" tabindex="0" role="region" aria-label="Study abstract">' + escapeHtml(text) + "</div>";
+          });
         } catch (err) {
-          host.innerHTML =
-            '<div class="note-box" style="margin-top:8px;">' +
-              "Could not load abstract inline. " +
-              '<a class="ext-link" href="https://pubmed.ncbi.nlm.nih.gov/' + encodeURIComponent(pmid) + '/" target="_blank" rel="noopener">Open on PubMed ↗</a>' +
-            "</div>";
+          if (token !== activeToken) return;
+          articles.forEach((art, aIdx) => {
+            if (abstractCache[art.pmid]) return;
+            const host = document.getElementById("abs-slot-" + token + "-" + aIdx);
+            if (host) {
+              host.innerHTML = '<div class="abstract-box">Could not load abstract inline. Click the study title above to view on NIH PubMed.</div>';
+            }
+          });
         }
       }
 
@@ -1710,12 +1685,12 @@
         const pillEl = document.getElementById("pill-pubmed");
 
         pillEl.textContent = "Searching…";
-        contentEl.innerHTML = '<p class="status-text">Searching NIH PubMed for peer-reviewed probiotic research…</p>';
+        contentEl.innerHTML = '<p class="status-text">Searching NIH PubMed for peer-reviewed studies…</p>';
 
         const cleanStr = cleanStrain(org.strain);
         const strainQuery = buildStrainQuery(cleanStr);
         const titleAbsQuery = buildOrganismQuery(org.species, "[Title/Abstract]");
-        const cacheKey = org.species + "|" + cleanStr + "|PUBMED_TIERED_3";
+        const cacheKey = org.species + "|" + cleanStr + "|PUBMED_TIERED_2";
 
         try {
           let data = pubmedCache[cacheKey];
@@ -1726,7 +1701,7 @@
 
             if (strainQuery) {
               const tier1Term = titleAbsQuery + " AND " + strainQuery + " AND probiotic";
-              const t1 = await queryPubMedTop3(tier1Term);
+              const t1 = await queryPubMedTop2(tier1Term);
               if (t1.totalCount > 0) {
                 res = t1;
                 scopeBadge = "Strain + Probiotic";
@@ -1736,7 +1711,7 @@
 
             if (!res && strainQuery) {
               const tier2Term = titleAbsQuery + " AND " + strainQuery;
-              const t2 = await queryPubMedTop3(tier2Term);
+              const t2 = await queryPubMedTop2(tier2Term);
               if (t2.totalCount > 0) {
                 res = t2;
                 scopeBadge = "Strain Study";
@@ -1746,14 +1721,14 @@
 
             if (!res) {
               const tier3Term = titleAbsQuery + " AND probiotic";
-              res = await queryPubMedTop3(tier3Term);
+              res = await queryPubMedTop2(tier3Term);
               scopeBadge = "Species + Probiotic";
               usedTerm = tier3Term;
             }
 
             if (res.totalCount === 0) {
               const tier4Term = titleAbsQuery;
-              res = await queryPubMedTop3(tier4Term);
+              res = await queryPubMedTop2(tier4Term);
               scopeBadge = "Species Literature";
               usedTerm = tier4Term;
             }
@@ -1769,8 +1744,7 @@
 
           if (token !== activeToken) return;
 
-          const studyWord = data.totalCount === 1 ? "study" : "studies";
-          pillEl.textContent = data.totalCount.toLocaleString() + " " + studyWord;
+          pillEl.textContent = data.totalCount.toLocaleString() + (data.totalCount === 1 ? " study" : " studies");
           const pubmedSearchUrl = "https://pubmed.ncbi.nlm.nih.gov/?term=" + encodeURIComponent(data.usedTerm);
 
           const articlesHtml = data.articles.length === 0
@@ -1782,18 +1756,15 @@
                   '<article class="rec-card">' +
                     '<div class="rec-top-row">' +
                       '<div class="rec-title">' +
-                        '<a class="rec-title-link" href="' + articleUrl + '" target="_blank" rel="noopener">' + escapeHtml(art.title) + "</a>" +
+                        '<a class="rec-title-link" href="' + articleUrl + '" target="_blank" rel="noopener">' + escapeHtml(art.title) + " ↗</a>" +
                       "</div>" +
                       '<span class="scope-badge">' + escapeHtml(data.scopeBadge) + "</span>" +
                     "</div>" +
-                    '<div class="rec-meta">' +
-                      escapeHtml(art.firstAuthor) + " &middot; <em>" + escapeHtml(art.journal) + "</em> " + (art.year ? "(" + escapeHtml(art.year) + ")" : "") + " &middot; PMID: " + escapeHtml(art.pmid) +
+                    '<div class="rec-meta" style="margin-bottom:4px;">' +
+                      escapeHtml(art.firstAuthor) + " &middot; <em>" + escapeHtml(art.journal) + "</em> " + (art.year ? ("(" + escapeHtml(art.year) + ")") : "") + " &middot; PMID: " + escapeHtml(art.pmid) +
                     "</div>" +
-                    '<div class="action-row">' +
-                      '<button type="button" class="mini-btn abs-toggle-btn" data-pmid="' + escapeHtml(art.pmid) + '" data-slot="' + slotId + '" aria-expanded="false" aria-controls="' + slotId + '">Show abstract</button>' +
-                      '<a class="ext-link" href="' + articleUrl + '" target="_blank" rel="noopener">Open on PubMed ↗</a>' +
-                    "</div>" +
-                    '<div id="' + slotId + '" class="hidden"></div>' +
+                    '<div class="box-label">Abstract:</div>' +
+                    '<div id="' + slotId + '"></div>' +
                   "</article>"
                 );
               }).join("");
@@ -1801,18 +1772,12 @@
           contentEl.innerHTML =
             articlesHtml +
             '<div class="section-footer">' +
-              '<a class="ext-link" href="' + pubmedSearchUrl + '" target="_blank" rel="noopener">View all ' + data.totalCount.toLocaleString() + " " + studyWord + " on NIH PubMed ↗</a>" +
+              '<a class="ext-link" href="' + pubmedSearchUrl + '" target="_blank" rel="noopener">View all ' + data.totalCount.toLocaleString() + " studies on NIH PubMed ↗</a>" +
             "</div>";
 
-          contentEl.querySelectorAll(".abs-toggle-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-              toggleAbstract(
-                btn.getAttribute("data-pmid"),
-                btn.getAttribute("data-slot"),
-                btn
-              );
-            });
-          });
+          if (data.articles.length > 0) {
+            autoLoadPubMedAbstracts(data.articles, token);
+          }
         } catch (err) {
           if (token !== activeToken) return;
           pillEl.textContent = "Unavailable";
@@ -1831,7 +1796,7 @@
 
       /**
        * ======================================================================
-       * 9. MAIN COORDINATOR & BOOTSTRAP
+       * 9. MAIN COORDINATOR & STARTUP
        * ======================================================================
        */
       function selectOrganism(idx) {
@@ -1851,32 +1816,23 @@
           "<strong>Strain on Bottle:</strong> " + (hasStrain ? escapeHtml(org.strain) : "No strain listed");
 
         const aliasEl = document.getElementById("selected-org-alias");
-        const sAliases = getStrainAliases(cleanStrain(org.strain));
-        const altStrains = sAliases.filter(a => a !== cleanStrain(org.strain));
-        const notes = [];
         if (aliases.length > 1) {
-          const altName = aliases.find(a => a !== org.species) || aliases[1];
-          notes.push("<strong>Taxonomic synonym:</strong> <em>" + escapeHtml(altName) + "</em>");
-        }
-        if (altStrains.length > 0) {
-          notes.push("<strong>Repository strain alias:</strong> " + altStrains.map(escapeHtml).join(" / "));
-        }
-        if (notes.length > 0) {
-          aliasEl.innerHTML = notes.join(" &middot; ");
+          aliasEl.innerHTML = "<strong>Taxonomic synonym:</strong> <em>" + escapeHtml(aliases[1]) + "</em>";
           aliasEl.classList.remove("hidden");
         } else {
           aliasEl.classList.add("hidden");
         }
 
+        // Queue all 3 lookups sequentially via fetchNcbiResilient (360ms spacing)
         load16SSection(org, token);
         loadGenomeSection(org, token);
         loadPubMedSection(org, token);
       }
 
-      // Bootstrap on load
-      const initial = resolveInitialSampleFromUrl();
-      currentCode = initial.code;
-      invalidParamCode = initial.invalid;
+      // Initialize Dashboard & Check URL ?sample= Parameter
+      const initialRoute = resolveInitialSampleFromUrl();
+      currentCode = initialRoute.code;
+      invalidParamCode = initialRoute.invalid;
 
       initProductSelect();
       renderBannerAndList();
